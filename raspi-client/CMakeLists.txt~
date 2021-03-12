@@ -1,0 +1,14 @@
+project( smartFog )
+
+cmake_minimum_required(VERSION 3.16)
+
+find_package( OpenCV REQUIRED )
+
+SET(CMAKE_BUILD_TYPE Release)
+
+# Flags de compilación de C++.
+set (CMAKE_CXX_FLAGS "-O3 -g -Wall -pthread")
+
+
+add_executable( raspi-client raspi-client.cpp camera-utils.cpp)
+target_link_libraries( raspi-client ${OpenCV_LIBS} )

@@ -1,0 +1,3 @@
+/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/rebuild_cache.dir
+/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/edit_cache.dir
+/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/raspi-client.dir
