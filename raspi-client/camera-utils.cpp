@@ -315,7 +315,7 @@ void *getFrame(void *input) {
   }
   
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
-  VideoCapture cap(0); //VideoCapture From 0
+  VideoCapture cap(0, cv::CAP_V4L); //VideoCapture From 0
   Mat img;
   
   if(!cap.isOpened()) {
