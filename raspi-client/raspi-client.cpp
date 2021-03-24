@@ -11,7 +11,7 @@ using namespace cv;
 #define TH_WORKER   1
 #define TH_CONSUMER 2
 
-#define XML_CONFIG_FILE    "../../xml-config.xml"
+#define XML_CONFIG_FILE    "../xml-config.xml"
 
 /**** G L O B A L    V A R I A B L E S *******/
 //Global Queues
@@ -25,6 +25,12 @@ pthread_mutex_t m_send;
 int items;
 int items_send;
 
+bool finished;
+
+//GLOBAL VARIABLE FOR DEBUG (PATH TO THE IMAGE)
+char *img_path;
+bool debug;
+
 /***************   M A I N  *****************/
 int main (int argc, char *argv[]) {
 
@@ -32,7 +38,13 @@ int main (int argc, char *argv[]) {
   pthread_attr_t attr;
   cpu_set_t cpu_set;
   int ret;
+
   items = 0;
+  finished = false;
+  if (argc > 1) {
+    debug = true;
+    img_path = strdup(argv[1]);
+  }
 
   //Read XML config
   xmlConfig_t * xmlConfig = newXmlConfig();

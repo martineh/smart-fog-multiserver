@@ -1,4 +1,4 @@
-# Install script for directory: /home/hmartinez/workspace/multiClient-server/raspi-client
+# Install script for directory: /home/hmartinez/workspace/smart-fog-multiserver/raspi-client
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/hmartinez/workspace/multiClient-server/raspi-client/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

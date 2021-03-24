@@ -6,11 +6,11 @@
 
 #IncludeRegexTransform: 
 
-/home/hmartinez/workspace/multiClient-server/raspi-client/camera-utils.cpp
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/camera-utils.cpp
 camera-utils.hpp
-/home/hmartinez/workspace/multiClient-server/raspi-client/camera-utils.hpp
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/camera-utils.hpp
 
-/home/hmartinez/workspace/multiClient-server/raspi-client/camera-utils.hpp
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/camera-utils.hpp
 opencv2/opencv.hpp
 -
 opencv2/core.hpp
@@ -26,9 +26,9 @@ unistd.h
 arpa/inet.h
 -
 xml-utils/xml-utils.hpp
-/home/hmartinez/workspace/multiClient-server/raspi-client/xml-utils/xml-utils.hpp
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/xml-utils/xml-utils.hpp
 
-/home/hmartinez/workspace/multiClient-server/raspi-client/xml-utils/tinyxml2.h
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/xml-utils/tinyxml2.h
 ctype.h
 -
 limits.h
@@ -58,7 +58,7 @@ android/log.h
 assert.h
 -
 
-/home/hmartinez/workspace/multiClient-server/raspi-client/xml-utils/xml-utils.hpp
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/xml-utils/xml-utils.hpp
 fstream
 -
 iostream
@@ -84,7 +84,7 @@ iostream
 unistd.h
 -
 tinyxml2.h
-/home/hmartinez/workspace/multiClient-server/raspi-client/xml-utils/tinyxml2.h
+/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/xml-utils/tinyxml2.h
 
 /usr/local/include/opencv4/opencv2/calib3d.hpp
 opencv2/core.hpp

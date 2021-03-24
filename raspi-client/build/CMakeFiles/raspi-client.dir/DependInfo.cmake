@@ -4,10 +4,10 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/hmartinez/workspace/multiClient-server/raspi-client/camera-utils.cpp" "/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/raspi-client.dir/camera-utils.cpp.o"
-  "/home/hmartinez/workspace/multiClient-server/raspi-client/raspi-client.cpp" "/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/raspi-client.dir/raspi-client.cpp.o"
-  "/home/hmartinez/workspace/multiClient-server/raspi-client/xml-utils/tinyxml2.cpp" "/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/raspi-client.dir/xml-utils/tinyxml2.cpp.o"
-  "/home/hmartinez/workspace/multiClient-server/raspi-client/xml-utils/xml-utils.cpp" "/home/hmartinez/workspace/multiClient-server/raspi-client/build/CMakeFiles/raspi-client.dir/xml-utils/xml-utils.cpp.o"
+  "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/camera-utils.cpp" "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/build/CMakeFiles/raspi-client.dir/camera-utils.cpp.o"
+  "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/raspi-client.cpp" "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/build/CMakeFiles/raspi-client.dir/raspi-client.cpp.o"
+  "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/xml-utils/tinyxml2.cpp" "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/build/CMakeFiles/raspi-client.dir/xml-utils/tinyxml2.cpp.o"
+  "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/xml-utils/xml-utils.cpp" "/home/hmartinez/workspace/smart-fog-multiserver/raspi-client/build/CMakeFiles/raspi-client.dir/xml-utils/xml-utils.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -27,6 +27,11 @@ extern pthread_mutex_t m_send;
 extern int items;
 extern int items_send;
 
+extern bool finished;
+
+//GLOBAL VARIABLE FOR DEBUG (PATH TO THE IMAGE)
+extern char *img_path;
+extern bool debug;
 
 /*****  T I M I N G    F U N C T I O N  *****/
 void timerStart(timeval *t_start) {
@@ -299,6 +304,16 @@ Mat imageTransformHandler(Mat img, int colorReduction,
 
 //= C A P T U R E    F R A M E S =//
 void *getFrame(void *input) {
+
+  if (debug) {
+    std::cout << "IMAGE PATH:" << img_path << std::endl;
+    Mat img = imread(img_path, IMREAD_COLOR);
+    insert_capture(img);
+
+    finished = true;
+    return NULL;
+  }
+  
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   VideoCapture cap(0); //VideoCapture From 0
   Mat img;
@@ -317,12 +332,20 @@ void *getFrame(void *input) {
     insert_capture(img);//img.clone());
   }
 
+  finished = true;
   return NULL; 
 }
 
 
 //= P R O C E S S    F R A M E S =//
 void *processFrame(void *input) {
+
+  if (debug) {
+    Mat img = pop_capture();
+    insert_send(img);
+    return NULL;
+  }
+
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   Mat img, background;
   
@@ -332,7 +355,7 @@ void *processFrame(void *input) {
   
   background = calculateBackground(xmlConfig->bAverage);
   
-  while(true) {
+  while(!finished) {
     img = pop_capture();
     int threshold = differenceRatioBackground(background, img, xmlConfig->pxThreshold);
     if (threshold > xmlConfig->imgThreshold) {
@@ -375,9 +398,12 @@ void *sendFrame(void *input) {
   unsigned int max_buff;
   unsigned char *imgPackBuff;
   
-  while(true) {
+  while(!finished) {
     img = pop_send();
+
     imgPackBuff = newImageVectorPack(img, &max_buff);
+    if (debug)
+      std::cout << "[CLIENT] Send image of " << max_buff << "(bytes)" << std::endl;    
     size_t b = write(sockfd, imgPackBuff, max_buff);
     if (b == 0)
       std::cout << "[WARNING] No data writed to the server." << std::endl;
