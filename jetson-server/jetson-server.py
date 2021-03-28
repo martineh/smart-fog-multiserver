@@ -293,16 +293,12 @@ def handle_send_to_Py(client):
         frame = task_queue.get()
         result, imgencode = cv2.imencode('.jpg', frame, encode_param)
         data = np.array(imgencode)
-        #stringData = data.tostring()
         client.send( str(data.size).ljust(16).encode());
-        client.send( data );        
-        #cv2.imshow('CLIENT', frame)
-        #cv2.waitKey(30)
+        client.send( data );
         del frame
         del data        
         task_queue.task_done()
-        #del imgencode, frame, data, stringData
-        #print ("[INFO] CLIENT: Remove Frame from queue(" + str(task_queue.qsize()) + ")")    
+
 
 def handle_send_backend(client):
     connected    = True
@@ -392,11 +388,11 @@ if __name__ == "__main__":
     
     scheme_str = ""
     if level == 1:
-        scheme_str = "[]-[RasPi (C++)]---->[Jetson-1 (Py)]" 
+        scheme_str = "(C++)-->[Jetson-1 (Py)]-->(Py)" 
     elif level == 2:
-        scheme_str = "[Jetson-1 (Py)]----->[Jetson-2 (Py)]" 
+        scheme_str = " (Py)-->[Jetson-2 (Py)]-->(Py)" 
     elif level == 3:
-        scheme_str = "[Jetson-2 (Py)]----->[Cloud (Py)]" 
+        scheme_str = " (Py)-->[Cloud (Py)]" 
     else:
         print("[ERROR] Level out of range [1-3]")
         sys.exit(-1)
