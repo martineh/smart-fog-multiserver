@@ -57,6 +57,8 @@ def timer_msg():
 
 def timing_handler(frameTot, tTot):
     log = timer_msg()
+    if tTot <= 0:
+        tTot = 1
     print("%s%s%d%s frames processed in %s%0.3f(s)%s [%s%0.3f(fps)%s] " %
           (log,
            bcolors.BOLD, frameTot, bcolors.ENDC,
