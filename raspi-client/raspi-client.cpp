@@ -51,6 +51,16 @@ int main (int argc, char *argv[]) {
   readXmlConfig(XML_CONFIG_FILE, xmlConfig);
   printXmlConfig(xmlConfig);
 
+  std::cout << "                                          " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "              [SCHEME LEVEL]              " << std::endl;
+  std::cout << "------------------------------------------" << std::endl;
+  std::cout << "       [Raspberry Pi (C++)]-->(Py)        " << std::endl;
+  std::cout << "                                          " << std::endl;
+  std::cout << "             [CAMERA CAPTURE]             " << std::endl;
+  std::cout << "******************************************" << std::endl;
+   std::cout << "                                          " << std::endl;
+   
   if (pthread_mutex_init(&m, NULL) != 0) {
     std::cout << "Mutex init failed." << std::endl;
     return 0;

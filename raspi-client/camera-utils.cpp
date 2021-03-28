@@ -95,7 +95,10 @@ char *getPrintMsg(int code, char *log_msg) {
   char date_str[128];
   char code_str[64];
   
-  sprintf(log_msg, "%s%s ", getLogCode(code, code_str), getDateAndTime(date_str));
+  getLogCode(code, code_str);
+  getDateAndTime(date_str);
+  
+  sprintf(log_msg, "%s%s ", code_str, date_str);
 
   return log_msg;
 }
@@ -432,8 +435,11 @@ void *sendFrame(void *input) {
   int sockfd; 
   struct sockaddr_in servaddr;
   
-  char log_str[128];
+  char log_str[256];
   char code_str[128];
+
+  size_t n_frames = 0;
+  timeval t_start, t_stop;
   
   // socket create and varification 
   sockfd = socket(AF_INET, SOCK_STREAM, 0); 
@@ -459,9 +465,8 @@ void *sendFrame(void *input) {
 
   std::cout <<  getPrintMsg(LOG_CODE, log_str) << "CLIENT started on " <<
     xmlConfig->ip << ":" << xmlConfig->port << " " << getLogCode(OK_CODE, code_str) << std::endl;
-  
-  exit(-1);
-  
+
+  timerStart(&t_start);
   while(!finished) {
     img = pop_send();
 
@@ -472,12 +477,21 @@ void *sendFrame(void *input) {
     //sleep(30);
     if (b == 0)
       std::cout << "[WARNING] No data writed to the server." << std::endl;
+
     free(imgPackBuff);
     img.release();
+
+    n_frames += 1;
+    if ((n_frames % 10) == 0) {
+        timerStop(&t_stop);
+	double t_total = getTime(t_start, t_stop);
+	printf("%sCLIENT %d frames captured in %0.2f(s) [%0.2f(fps)]\r",
+	       getPrintMsg(TIMING_CODE, log_str), n_frames, t_total, n_frames / t_total);
+	fflush(stdout);
+    }    
   }
   
   close(sockfd);
   
   return NULL;
 }
-
