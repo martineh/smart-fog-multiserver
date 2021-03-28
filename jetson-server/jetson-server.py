@@ -25,7 +25,7 @@ FORMAT       = 'utf-8'
 imgData_conn = {} #Dicctionary for each host and its image
 totImg_conn  = {} #Dicctiorary for each host and the total number of image received
 
-PRINT_LIM    = 30
+PRINT_LIM    = 10
 #- Input variables
 debug        = False
 write        = False
@@ -61,7 +61,9 @@ def timing_handler(frameTot, tTot):
           (log,
            bcolors.BOLD, frameTot, bcolors.ENDC,
            bcolors.BOLD, tTot, bcolors.ENDC,
-           bcolors.OKCYAN, frameTot / tTot, bcolors.ENDC))
+           bcolors.OKCYAN, frameTot / tTot, bcolors.ENDC),
+           flush=True,
+           end='\r')
 
         
 def apply_deepLearning(image):
@@ -226,9 +228,8 @@ def handle_client_Py(conn, addr):
     connected    = True
     id_conn = addr[0] + ":" + str(addr[1])
     
-    frameLim = 0
+    first = True
     frameTot = 0
-    t0 = time.time()
     while True:
         length = recvall(conn, 16).decode()
         stringData = recvall(conn, int(length))
@@ -241,14 +242,16 @@ def handle_client_Py(conn, addr):
                 task_queue.put(output)
         else:
             task_queue.put(decimg)
-        frameLim += 1
+
         frameTot += 1
-        if frameLim == PRINT_LIM:
+        if (frameTot % PRINT_LIM) == 0:
+            if first:
+                t0 = time.time()
+                first=False
+                frameTot = 1
             t_tot = (time.time() - t0)
-            t0  = time.time()
             timing_handler(frameTot, t_tot)
-            frameLim = 0
-            frameTot = 0
+
     conn.close()
     
 def handle_client_C(conn, addr):
@@ -258,9 +261,8 @@ def handle_client_C(conn, addr):
     connected    = True
     id_conn = addr[0] + ":" + str(addr[1])
     
-    frameLim = 0
+    first = True
     frameTot = 0
-    t0 = time.time()
     while connected:
         data = conn.recv(PACK_SIZE)
         if data:
@@ -273,14 +275,15 @@ def handle_client_C(conn, addr):
                         task_queue.put(image)
                 else:
                     task_queue.put(img)
-                frameLim  += 1
+                
                 frameTot += 1
-                if frameLim == PRINT_LIM:
+                if (frameTot % PRINT_LIM) == 0:
+                    if first:
+                        first = False
+                        t0 = time.time()
+                        frameTot = 1
                     t_tot = (time.time() - t0)
-                    t0    = time.time()
                     timing_handler(frameTot, t_tot)
-                    frameLim = 0
-                    frameTot = 0
 
     conn.close()
 
