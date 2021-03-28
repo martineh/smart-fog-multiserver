@@ -38,7 +38,7 @@ int main (int argc, char *argv[]) {
   pthread_attr_t attr;
   cpu_set_t cpu_set;
   int ret;
-
+  
   items = 0;
   finished = false;
   if (argc > 1) {
@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
   //Read XML config
   xmlConfig_t * xmlConfig = newXmlConfig();
   readXmlConfig(XML_CONFIG_FILE, xmlConfig);
-
+  printXmlConfig(xmlConfig);
 
   if (pthread_mutex_init(&m, NULL) != 0) {
     std::cout << "Mutex init failed." << std::endl;

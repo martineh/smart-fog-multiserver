@@ -1,6 +1,6 @@
 <Root>
-    <IpToSend>127.0.0.1</IpToSend>
-    <PortToSend>5001</PortToSend>
+    <IpToSend>192.168.1.61</IpToSend>
+    <PortToSend>5000</PortToSend>
     <ResolutionToSend>640x480</ResolutionToSend>
     <FramesPerSecond>30</FramesPerSecond>
     <ColorImage>1</ColorImage>
