@@ -408,7 +408,7 @@ if __name__ == "__main__":
     print(" -------------------------------------------------")
     print("                 [SCHEME LEVEL]                   ")
     print(" -------------------------------------------------")
-    print("        " + scheme_str                             )
+    print("             " + scheme_str                        )
     print("                                                  ")
     if level == 1:
         print("          [WEAPON AND BODY DETECTION]            ")
