@@ -19,7 +19,7 @@ image = cv2.imread(sys.argv[1])
 info, body_list = dL.body_weapon_detector(image)
 print(info)
 
-sys.exit(-1)
+
 for body in body_list:
     cv2.imshow("img", body)
     cv2.waitKey(0)    

@@ -74,7 +74,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pRootRead = xmlDocRead.FirstChild(); 
   if (pRootRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo padre.\n";
+    std::cout<<"ERROR Reading the first node.\n";
     return XML_ERROR_FILE_READ_ERROR;
   }
   
@@ -82,7 +82,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("IpToSend"); 
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"IpToSend\".\n";
+    std::cout<<"ERROR Reading child node: \"IpToSend\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   strcpy(ip, pElementRead->GetText());
@@ -91,7 +91,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("PortToSend"); 
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"PortToSend\".\n";
+    std::cout<<"ERROR Reading child node: \"PortToSend\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&port);
@@ -101,17 +101,17 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("ResolutionToSend");
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"ResolutionToSend\".\n";
+    std::cout<<"ERROR Reading child node: \"ResolutionToSend\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   resolution = pElementRead->GetText();
-  sscanf(resolution, "%dx%d", &numRows, &numCols);
+  sscanf(resolution, "%dx%d", &numCols, &numRows);
   
   //-> GET FPS
   pElementRead = pRootRead->FirstChildElement("FramesPerSecond");
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"FramesPerSecond\".\n";
+    std::cout<<"ERROR Reading child node: \"FramesPerSecond\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&fps);
@@ -121,7 +121,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("ColorImage");
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"ColorImage\".\n";
+    std::cout<<"ERROR Reading child node: \"ColorImage\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&inColor);
@@ -131,17 +131,17 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("ReducedSpatialResolution");
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"ReducedSpatialResolution\".\n";
+    std::cout<<"ERROR Reading child node: \"ReducedSpatialResolution\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   resolutionReduce = pElementRead->GetText();
-  sscanf(resolutionReduce, "%dx%d", &numRowsReduction, &numColsReduction);
+  sscanf(resolutionReduce, "%dx%d", &numColsReduction, &numRowsReduction);
 
   //-> GET COLOR REDUCTION
   pElementRead = pRootRead->FirstChildElement("ReducedColorResolutionInBits");
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"ReducedColorResolutionInBits\".\n";
+    std::cout<<"ERROR Reading child node: \"ReducedColorResolutionInBits\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&colorReduction);
@@ -151,7 +151,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("BackgroundAverage");
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"BackgroundAverage\".\n";
+    std::cout<<"ERROR Reading child node: \"BackgroundAverage\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&bAverage);
@@ -161,7 +161,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("PixelThreshold"); 
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"PixelThreshold\".\n";
+    std::cout<<"ERROR Reading child node: \"PixelThreshold\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&pxThreshold);
@@ -171,7 +171,7 @@ int readXmlConfig(const char *inputFile, xmlConfig_t *xmlConfig)
   pElementRead = pRootRead->FirstChildElement("ImageThreshold"); 
   if (pElementRead == nullptr)
   {
-    std::cout<<"Error al leer el nodo hijo: \"ImageThreshold\".\n";
+    std::cout<<"ERROR Reading child node: \"ImageThreshold\".\n";
     return XML_ERROR_PARSING_ELEMENT;
   }
   eResultRead = pElementRead->QueryIntText(&imgThreshold);
@@ -224,15 +224,15 @@ void printXmlConfig(xmlConfig_t *xmlConfig) {
   std::cout << "------------------------------------------"     << std::endl;
   std::cout << " IMAGE CAPTURE                            "     << std::endl;
   std::cout << "------------------------------------------"     << std::endl;
-  std::cout << "   >ROWS     : " << xmlConfig->numRows          << std::endl;
-  std::cout << "   >COLUMNS  : " << xmlConfig->numCols          << std::endl; 
+  std::cout << "   >RESOLUT. : " << xmlConfig->numCols << " x " <<
+    xmlConfig->numRows << std::endl;
   std::cout << "   >FPS      : " << xmlConfig->fps              << std::endl;
   std::cout << "   >COLOR    : " << xmlConfig->inColor          << std::endl;
   std::cout << "------------------------------------------"     << std::endl;
   std::cout << " IMAGE REDUCTION                          "     << std::endl;
   std::cout << "------------------------------------------"     << std::endl;
-  std::cout << "   >ROWS     : " << xmlConfig->numRowsReduction << std::endl;
-  std::cout << "   >COLUMNS  : " << xmlConfig->numColsReduction << std::endl;
+    std::cout << "   >RESOLUT. : " << xmlConfig->numColsReduction << " x " <<
+    xmlConfig->numRowsReduction << std::endl;
   std::cout << "   >COLOR    : " << xmlConfig->colorReduction   << std::endl;
   std::cout << "------------------------------------------"     << std::endl;
   std::cout << " BACKGROUND                               "     << std::endl;

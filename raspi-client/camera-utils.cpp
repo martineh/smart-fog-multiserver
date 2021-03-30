@@ -1,7 +1,8 @@
 #include "camera-utils.hpp" 
 
 /****   D E F I N E    S E C T I O N   *******/
-//* For the Camera 
+//* For logs
+#define PRINT_LIM 10
 
 //* For the TCP/IP Conection
 #define PORT 5050
@@ -331,25 +332,26 @@ Mat colorImageReduction(Mat img, int numBits) {
 Mat changeImageResolution(Mat img, int rows, int cols) {
   Mat outImage;
   Mat resizedImage;
-  Size newSize(rows, cols);
-  Size OriginalSize(img.cols, img.rows);
+  Size originalSize(img.cols, img.rows);
+  Size newSize(cols, rows);
+
   
   resize(img, resizedImage, newSize);//resize image
-  resize(resizedImage, outImage, OriginalSize);//resize image
+  resize(resizedImage, img, originalSize);//resize image
 
-  resizedImage.release();
-  img.release();
+  //resizedImage.release();
+  //img.release();
   
-  return outImage;
+  return img;//outImage;
 }
 
 Mat imageTransformHandler(Mat img, int colorReduction, 
 			  int rowsReduction, int colsReduction,
 			  bool enableTransform) {
   if (enableTransform) {
-    if (colorReduction != 1)
+    if (colorReduction != 1) {
       img = colorImageReduction(img, colorReduction);
-    
+    }
     if((img.rows != rowsReduction) ||
        (img.cols != colsReduction)) {
       //img = changeImageResolution(img, rowsReduction, colsReduction);
@@ -383,8 +385,8 @@ void *getFrame(void *input) {
   }
 
   //Image Size Fixed
-  cap.set(cv::CAP_PROP_FRAME_WIDTH,  xmlConfig->numRows);
-  cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numCols);
+  cap.set(cv::CAP_PROP_FRAME_WIDTH,  xmlConfig->numCols);
+  cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numRows);
   
   while (true) {
     cap >> img;
@@ -417,7 +419,7 @@ void *processFrame(void *input) {
   while(!finished) {
     img = pop_capture();
     int threshold = differenceRatioBackground(background, img, xmlConfig->pxThreshold);
-    if (threshold > xmlConfig->imgThreshold || true) {
+    if (threshold > xmlConfig->imgThreshold) {
       img = imageTransformHandler(img, colorReduction, rowsReduction, colsReduction, true);
       insert_send(img);
     }
@@ -440,7 +442,8 @@ void *sendFrame(void *input) {
 
   size_t n_frames = 0;
   timeval t_start, t_stop;
-  
+
+  double t_global = 0;
   // socket create and varification 
   sockfd = socket(AF_INET, SOCK_STREAM, 0); 
   if (sockfd == -1) {
@@ -482,12 +485,14 @@ void *sendFrame(void *input) {
     img.release();
 
     n_frames += 1;
-    if ((n_frames % 10) == 0) {
+    if ((n_frames % PRINT_LIM) == 0) {
         timerStop(&t_stop);
 	double t_total = getTime(t_start, t_stop);
+	t_global += t_total;
 	printf("%sCLIENT %d frames captured in %0.2f(s) [%0.2f(fps)]\r",
-	       getPrintMsg(TIMING_CODE, log_str), n_frames, t_total, n_frames / t_total);
+	       getPrintMsg(TIMING_CODE, log_str), n_frames, t_global,  PRINT_LIM / t_total);
 	fflush(stdout);
+	timerStart(&t_start);
     }    
   }
   
