@@ -55,7 +55,7 @@ def timer_msg():
     t_string = now.strftime("%d/%m/%Y %H:%M:%S")
     return "["+bcolors.OKBLUE+"TIMING"+bcolors.ENDC+"]["+bcolors.BOLD+t_string+bcolors.ENDC +"] "
 
-def timing_handler(frameTot, tTot):
+def timing_handler(frameTot, tTot, fps):
     log = timer_msg()
     if tTot <= 0:
         tTot = 1
@@ -63,7 +63,7 @@ def timing_handler(frameTot, tTot):
           (log,
            bcolors.BOLD, frameTot, bcolors.ENDC,
            bcolors.BOLD, tTot, bcolors.ENDC,
-           bcolors.OKCYAN, frameTot / tTot, bcolors.ENDC),
+           bcolors.OKCYAN, fps, bcolors.ENDC),
            flush=True,
            end='\r')
 
@@ -230,8 +230,8 @@ def handle_client_Py(conn, addr):
     connected    = True
     id_conn = addr[0] + ":" + str(addr[1])
     
-    first = True
-    frameTot = 0
+    #first = True
+    #frameTot = 0
     while True:
         length = recvall(conn, 16).decode()
         stringData = recvall(conn, int(length))
@@ -245,14 +245,14 @@ def handle_client_Py(conn, addr):
         else:
             task_queue.put(decimg)
 
-        frameTot += 1
-        if (frameTot % PRINT_LIM) == 0:
-            if first:
-                t0 = time.time()
-                first=False
-                frameTot = 1
-            t_tot = (time.time() - t0)
-            timing_handler(frameTot, t_tot)
+        #frameTot += 1
+        #if (frameTot % PRINT_LIM) == 0:
+        #if first:
+        #t0 = time.time()
+        #first=False
+        #frameTot = 1
+        #t_tot = (time.time() - t0)
+        #timing_handler(frameTot, t_tot, frameTot / tTot)
 
     conn.close()
     
@@ -263,8 +263,6 @@ def handle_client_C(conn, addr):
     connected    = True
     id_conn = addr[0] + ":" + str(addr[1])
     
-    first = True
-    frameTot = 0
     while connected:
         data = conn.recv(PACK_SIZE)
         if data:
@@ -277,16 +275,7 @@ def handle_client_C(conn, addr):
                         task_queue.put(image)
                 else:
                     task_queue.put(img)
-                
-                frameTot += 1
-                if (frameTot % PRINT_LIM) == 0:
-                    if first:
-                        first = False
-                        t0 = time.time()
-                        frameTot = 1
-                    t_tot = (time.time() - t0)
-                    timing_handler(frameTot, t_tot)
-
+                                
     conn.close()
 
 
@@ -294,6 +283,9 @@ def handle_send_to_Py(client):
     connected    = True
     encode_param=[int(cv2.IMWRITE_JPEG_QUALITY),90]
     
+    frameTot = 0
+    t_global = 0
+    t0 = time.time()
     while connected:
         frame = task_queue.get()
         result, imgencode = cv2.imencode('.jpg', frame, encode_param)
@@ -301,10 +293,16 @@ def handle_send_to_Py(client):
         client.send( str(data.size).ljust(16).encode());
         client.send( data );
         del frame
-        del data        
+        del data      
         task_queue.task_done()
 
-
+        frameTot += 1
+        if (frameTot % PRINT_LIM) == 0:
+            t_tot = (time.time() - t0)
+            t_global += t_tot
+            timing_handler(frameTot, t_global, PRINT_LIM / t_tot)
+            t0 = time.time()
+            
 def handle_send_backend(client):
     connected    = True
     #Path to write images
@@ -314,7 +312,10 @@ def handle_send_backend(client):
             shutil.rmtree(output_path)        
         os.mkdir(output_path)
         frameId = 0
-        
+
+    frameTot = 0
+    t_global = 0
+    t0 = time.time()
     while connected:
         output = task_queue.get()
         if write:
@@ -327,6 +328,13 @@ def handle_send_backend(client):
                 cv2.imwrite(output_path+"/face-"+str(frameId)+"-"+tag+".jpg", output[0])
             frameId += 1
         task_queue.task_done()
+        
+        frameTot += 1
+        if (frameTot % PRINT_LIM) == 0:
+            t_tot = (time.time() - t0)
+            t_global += t_tot
+            timing_handler(frameTot, t_global, PRINT_LIM / t_tot)
+            t0 = time.time()
 
     
 #------------ Thread Starters ------------#
