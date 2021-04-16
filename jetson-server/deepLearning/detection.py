@@ -6,59 +6,151 @@ import os
 import face_recognition
 from PIL import Image, ImageDraw
 
+import torch
+
 config_path = os.path.dirname(__file__)
 
-#-------------------------------------------------------------------------
-#                   W E A P O N    D E T E C T I O N
-#-------------------------------------------------------------------------
-weapons_net   = cv2.dnn.readNet(config_path + "/weapons_net/yolov3.weights",
-                                config_path + "/weapons_net/yolov3.cfg")
-layers_names  = weapons_net.getLayerNames()
-output_layers = [layers_names[i[0]-1] for i in weapons_net.getUnconnectedOutLayers()]
+def display_image(image, weapon_boxes, body_boxes, final_body_boxes):
+    for box, conf, cls, center in body_boxes:
+        c1, c2 = (box[0], box[1]), (box[2], box[3])
+        cv2.rectangle(image, c1, c2, (255, 0, 0), 3)
+        cv2.putText(image, "body", (c1[0], c1[1] - 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (225, 255, 255), 2, lineType=cv2.LINE_AA)
 
-def detect_objects(img, outputLayers):			
-    blob = cv2.dnn.blobFromImage(img, scalefactor=0.00392,
-                                 size=(320, 320), mean=(0, 0, 0),
-                                 swapRB=True, crop=False)
-    weapons_net.setInput(blob)
-    outputs = weapons_net.forward(outputLayers)
-    return blob, outputs
+    for box in final_body_boxes:
+        c1, c2 = (box[0], box[1]), (box[2], box[3])
+        cv2.rectangle(image, c1, c2, (0, 255, 0), 3)
+        cv2.putText(image, "body-weapon", (c1[0], c1[1] - 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (225, 255, 255), 2, lineType=cv2.LINE_AA)
 
-def get_box_dimensions(outputs, height, width):
-    boxes = []
-    confs = []
-    class_ids = []
-    for output in outputs:
-        for detect in output:
-            scores = detect[5:]
-            class_id = np.argmax(scores)
-            conf = scores[class_id]
-            if conf > 0.1:
-                center_x = int(detect[0] * width)
-                center_y = int(detect[1] * height)
-                w = int(detect[2] * width)
-                h = int(detect[3] * height)
-                x = int(center_x - w/2)
-                y = int(center_y - h / 2)
-                boxes.append([x, y, w, h])
-                confs.append(float(conf))
-                class_ids.append(class_id)
-    return boxes, confs, class_ids
+    for box, conf, cls, center in weapon_boxes:
+        label = f'Weapon {conf:.2f}'
+        c1, c2 = (box[0], box[1]), (box[2], box[3])
+        cv2.rectangle(image, c1, c2, (0, 0, 255), 3)
+        cv2.putText(image, label, (c1[0], c1[1] - 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (225, 255, 255), 2, lineType=cv2.LINE_AA)
 
-def detect_weapons(image, debug):	
-    height, width, channels = image.shape
-    blob, outputs = detect_objects(image, output_layers)
-    boxes, confs, class_ids = get_box_dimensions(outputs, height, width)    
-    idxs = cv2.dnn.NMSBoxes(boxes, confs, 0.5, 0.4)
+    scale_percent = 100 # percent of original size 
+    width = int(image.shape[1] * scale_percent / 100)
+    height = int(image.shape[0] * scale_percent / 100)
+    dim = (width, height)
     
-    return idxs, boxes
+    # resize image
+    resized = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+    cv2.imwrite("result.png", resized)
+    #cv2.waitKey(0)
+
+
+def pixel_centered(box):
+    c1, c2 = (box[0], box[1]), (box[2], box[3])
+    x0, y0 = c1
+    x1, y1 = c2
+    width  = x1 - x0
+    height = y1 - y0
+    return (x0 + int(width/2), y0 + int(height/2))
+
+def get_distance(p0, p1):
+    diff = (p0[0] - p1[0], p0[1] - p1[1])
+    return np.sqrt(diff[0]*diff[0] + diff[1]*diff[1])            
+
+def crop_image(box, image):
+    c1, c2 = (box[0], box[1]), (box[2], box[3])
+    x0, y0 = c1
+    x1, y1 = c2
+    width  = x1 - x0
+    height = y1 - y0
+
+    return image[y0:y0+height, x0:x0+width]
+#-------------------------------------------------------------------------
+#                   L O A D    M O D E L S    Y O L O    V 5
+#-------------------------------------------------------------------------
+
+weapon_model = torch.hub.load('ultralytics/yolov5', 'custom',
+                              path_or_model=config_path+"/models/weapons.pt")
+
+body_model = torch.hub.load('ultralytics/yolov5', 'custom',
+                              path_or_model=config_path+"/models/yolov5s.pt")
+
+#-------------------------------------------------------------------------
+#          W E A P O N    A N D    B O D Y    D E T E C T I O N
+#-------------------------------------------------------------------------
+
+def detect_weapon_to_body(image):
+    info = {'gun' : 0, 'knife' : 0}    
+    crops = []
+    #weapon detection
+    weapon_boxes = []
+    weapon_results = weapon_model(image[:, :, ::-1], size=640)    
+    for (img, pred) in zip(weapon_results.imgs, weapon_results.pred):
+        for *box, conf, cls in pred:
+            if (int(cls) in [0, 2]) and (conf > 0.5):
+                if int(cls) == 0:
+                    info['gun'] += 1
+                else:
+                    info['knife'] += 1
+                center = pixel_centered(box)
+                weapon_boxes.append([(int(box[0]), int(box[1]), int(box[2]), int(box[3])), conf, cls, center])
+
+    #body detection
+    body_boxes = []
+    body_results = body_model(image[:, :, ::-1], size=640)    
+    for (img, pred) in zip(body_results.imgs, body_results.pred):
+        for *box, conf, cls in pred:
+            if (int(cls) in [0, 2]) and (conf > 0.5):
+                center = pixel_centered(box)
+                body_boxes.append([(int(box[0]), int(box[1]), int(box[2]), int(box[3])), conf, cls, center])                
+
+    #Not weapons detected
+    if len(weapon_boxes) == 0 or len(body_boxes) == 0:
+        return None, None
+
+    #body association 
+    final_bodies = []
+    final_body_ids = []
+    for weapon in weapon_boxes:
+        w_box, w_conf, w_cls, w_center = weapon
+        min_distance = sys.maxsize
+        actual_body = 0
+        for body in body_boxes:
+            b_box, b_conf, b_cls, b_center = body
+            distance = get_distance(w_center, b_center)
+            if distance < min_distance:
+                body_id = actual_body
+                min_distance = distance
+            actual_body += 1
+
+        if body_id not in final_body_ids:
+            final_body_ids.append(body_id)
+            crops.append(crop_image(body_boxes[body_id][0], image))
+            final_bodies.append(body_boxes[body_id][0]) #Comment
+            
+    display_image(image, weapon_boxes, body_boxes, final_bodies)
+    
+    return info, crops    
+
 
         
 #-------------------------------------------------------------------------
 #                   B O D Y    D E T E C T I O N
 #-------------------------------------------------------------------------
-body_net = cv2.dnn.readNetFromDarknet(config_path + "/body_net/yolov3.cfg",
-                                      config_path + "/body_net/yolov3.weights")
+
+def detect_body(image):
+    results = body_model(image[:, :, ::-1], size=640)
+    
+    for (img, pred) in zip(results.imgs, results.pred):
+        for *box, conf, cls in pred:
+            if (int(cls) == 0) and (conf > 0.5):
+                label = f'{results.names[int(cls)]} {conf:.2f}'
+                c1, c2 = (int(box[0]), int(box[1])), (int(box[2]), int(box[3]))
+                cv2.rectangle(image, c1, c2, (255, 0, 0), 3)
+                cv2.putText(image, label, (c1[0], c1[1] - 2), cv2.FONT_HERSHEY_SIMPLEX, 1, (225, 255, 255), 2, lineType=cv2.LINE_AA)
+    
+    scale_percent = 30 # percent of original size 
+    width = int(image.shape[1] * scale_percent / 100)
+    height = int(image.shape[0] * scale_percent / 100)
+    dim = (width, height)
+    
+    # resize image
+    resized = cv2.resize(image, dim, interpolation = cv2.INTER_AREA)
+    cv2.imshow("img", resized)
+    cv2.waitKey(0)
 
 def detect_body_knife(image):
     CONFIDENCE = 0.5
@@ -174,9 +266,6 @@ def identify_faces(unknown_image, face_locations):
 #                           W R A P P E R S
 #-------------------------------------------------------------------------
 
-def pixel_centered(box):
-    x, y, w, h = box
-    return (x + int(w/2), y + int(h/2))
 
 def body_weapon_detector(image):
     info = {'gun' : 0, 'knife' : 0}
