@@ -17,19 +17,17 @@ image = cv2.imread(sys.argv[1])
 #sys.exit(-1)
 
 info, body_list = dL.body_weapon_detector(image)
-print(info)
-
-
-for body in body_list:
-    cv2.imshow("img", body)
-    cv2.waitKey(0)    
-    face = dL.face_detector(body)
-    names = dL.face_identify(face)
+#print(info)
+#for body in body_list:
+#    cv2.imshow("img", body)
+#    cv2.waitKey(0)    
+#    face = dL.face_detector(body)
+#    names = dL.face_identify(face)
 #body = body_list[0]
 
 
 
-print("People Identify: {}".format(names))
+#print("People Identify: {}".format(names))
 
 
 '''
