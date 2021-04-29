@@ -48,7 +48,7 @@ def pixel_centered(box):
 
 def get_distance(p0, p1):
     diff = (p0[0] - p1[0], p0[1] - p1[1])
-    return np.sqrt(diff[0]*diff[0] + diff[1]*diff[1])            
+    return torch.sqrt(diff[0]*diff[0] + diff[1]*diff[1])            
 
 def crop_image(box, image):
     c1, c2 = (box[0], box[1]), (box[2], box[3])
