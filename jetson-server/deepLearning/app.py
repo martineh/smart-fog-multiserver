@@ -1,4 +1,6 @@
-import detection as dL
+import weapon_detection as wD
+import face_detection  as fD
+
 import sys
 import cv2
 
@@ -10,7 +12,7 @@ import cv2
 #sys.exit(-1)
 
 image = cv2.imread(sys.argv[1])
-info, bodies = dL.detect_weapon_to_body(image)
+info, bodies = wD.detect_weapon_to_body(image)
 
 if bodies == None:
     print("Nothing Detected")
@@ -25,11 +27,11 @@ if bodies == None:
 print(info)
 for body in bodies:
     print("Body detected")
-    face = dL.face_detector(body)
+    face = fD.face_detector(body)
     if face is not None:
         cv2.imshow("img", face)
         cv2.waitKey(0)
-        names = dL.face_identify(face)
+        names = fD.face_identify(face)
         print("People Identify: {}".format(names))
     else:
         print("Face Not Detected")
