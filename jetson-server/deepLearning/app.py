@@ -1,37 +1,27 @@
-import detection as dL
+from yoloV5Wrap.wrap import ObjectDetection
+from yoloV5Wrap.wrap import pairing_bodies_to_objects, save_pair_results, body_crop
 import sys
 import cv2
+import time
 
-#import face_recognition
-#image = face_recognition.load_image_file(sys.argv[1])
-#face_locations = face_recognition.face_locations(image)
+if __name__ == "__main__":
+    img = cv2.imread(sys.argv[1])
 
-#print (face_locations)
-#sys.exit(-1)
+    bodyOD   = ObjectDetection("./yoloV5Wrap/models-smartFog/yolov5s.pt")
+    weaponOD = ObjectDetection("./yoloV5Wrap/models-smartFog/weapons.pt")
+    print("[*] Running inference...")
+    t0 = time.time()
+    bodies  = bodyOD.do_inference(img, class_filter=['person'])
+    weapons = weaponOD.do_inference(img)
+    t1 = time.time()
+    print("[*] Inference Done in %0.2f(s)" % (t1 - t0))
+    print("[*] Pairing objects and weapons and cropping images...")
+    t0 = time.time()
+    pairs = pairing_bodies_to_objects(weapons, bodies) 
+    bodies_crop = body_crop(pairs, weapons, bodies, img)
+    t1 = time.time()
+    print("[*] Pairing and cropping Done in %0.2f(s)" % (t1 - t0))    
+    save_pair_results(pairs, weapons, bodies, img, "results.jpg")
 
-image = cv2.imread(sys.argv[1])
-info, bodies = dL.detect_weapon_to_body(image)
-
-if bodies == None:
-    print("Nothing Detected")
-    
-#image = cv2.resize(image, (800, 600))
-#face = dL.face_detector(image)
-#names = dL.face_identify(face)
-#print("People Identify: {}".format(names))
-#sys.exit(-1)
-
-#info, body_list = dL.body_weapon_detector(image)
-print(info)
-for body in bodies:
-    print("Body detected")
-    face = dL.face_detector(body)
-    if face is not None:
-        cv2.imshow("img", face)
-        cv2.waitKey(0)
-        names = dL.face_identify(face)
-        print("People Identify: {}".format(names))
-    else:
-        print("Face Not Detected")
-
-
+    for i, b in enumerate(bodies_crop):
+        cv2.imwrite("crops/crop-"+str(i)+".jpg", b[0])

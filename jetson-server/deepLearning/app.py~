@@ -1,41 +1,15 @@
-import bodyDetector.detector   as bd
-import weaponDetector.detector as wd
-import faceDetector.detector   as fd
-import faceIdentify.detector   as fi
-import cv2
+import yoloV5Wrap.wrap as yolo
 import sys
+import cv2
+import time
 
-from PIL import Image, ImageDraw
+if __name__ == "__main__":
+    img = cv2.imread(sys.argv[1])
 
-if __name__ == '__main__':
-    #Fase-0: Input Image Read
-    img_path = sys.argv[1]
-    print("Opening "+img_path+" .... ")
-    img = cv2.imread(img_path)
-    #img = cv2.resize(img, (640, 480))
+    print("[*] Running inference...")
+    t0 = time.time()
+    boxes = yolo.inference(img)
+    t1 = time.time()
+    print("[*] Inference Done in %0.2f(s)" % (t1 - t0))
 
-    #Fase-1: Body detection (Optional)
-    bodies = bd.detect_bodies(img)
-    
-    #Fase-2: Weapon detection (yolo)
-    weaponsDetected = wd.detect_weapons(img, debug=True)
-    print("Weapons Detected? : %s" % (weaponsDetected))
-    
-    #Fase-3: If a weapon detected, face detection (face_recognition)
-    locations = []
-    if weaponsDetected:
-        locations = fd.detect_faces(img, debug=True)
-        if len(locations) >= 1:
-            for face_location in locations:
-                # Print the location of each face in this image
-                top, right, bottom, left = face_location
-                print("A face is located at pixel location Top: {}, Left: {}, Bottom: {}, Right: {}".format(top, left, bottom, right))
-                face_image = img[top:bottom, left:right]
-                pil_image = Image.fromarray(face_image)
-                pil_image.show()
-
-    #Fase-4: Identify the faces
-    if len(locations) >= 1:
-        names = fi.identify_faces(img, locations)
-        print("People Identify: {}".format(names)) 
-        
+    yolo.save_img_inference("results.jpg", img, boxes)

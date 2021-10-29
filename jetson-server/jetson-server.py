@@ -14,7 +14,8 @@ import argparse
 from datetime import datetime
 
 #Deep learning
-import deepLearning.detection as dL
+
+
 
 #------------ Global Variables ------------#
 task_queue   = queue.Queue(20)
@@ -71,13 +72,13 @@ def timing_handler(frameTot, tTot, fps):
 def apply_deepLearning(image):
     if level == 1:
         #weapong and body detection
-        info, result = dL.body_weapon_detector(image)
+        info, result = wD.detect_weapon_to_body(image)
     elif level == 2:
         #face detection
-        result = dL.face_detector(image)
+        result = fD.face_detector(image)
     elif level == 3:
         #face identify
-        names = dL.face_identify(image)
+        names = fD.face_identify(image)
         result = [image, names]
 
     if debug:
@@ -480,7 +481,9 @@ if __name__ == "__main__":
     #--Server-Python That Receives from C++/Py
     if level == 1:
         # START SERVER: [C++] -> [Py]
+        import deepLearning.weapon_detection as wD
         server_start(handle_client_C, server_addr)
     else:
         # START SERVER: [Py]  -> [Py]
+        import deepLearning.face_detection  as fD
         server_start(handle_client_Py, server_addr)
