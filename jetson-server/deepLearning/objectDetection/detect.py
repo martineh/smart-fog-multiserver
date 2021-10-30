@@ -26,6 +26,24 @@ from PIL import Image
 from numpy import asarray
 import time
 
+RED_COLOR = (0, 0, 200)
+RCOLORS   = [ (0,   100, 230),
+              (100, 0,   230),
+              (230, 200, 0),
+              (200, 200, 100),
+              (0,   230, 100),
+              (200, 230, 0),
+              (0,   230, 0),           
+              (100, 230, 0),
+              (0,   230, 200),
+              (0,   0,   230),
+              (200, 0,   230),
+              (200, 0,   100),
+              (230, 100, 0),
+              (200, 50,  100),
+              (200, 100, 100),
+              (100, 0,   0) ]
+NUM_RCOLORS = len(RCOLORS)
 
 class Detection:
     def __init__(self, box, conf, c, name):
@@ -137,7 +155,7 @@ class YoloV5OD:
         cv2.imwrite(imgName, im0)
 
 
-def pairing_bodies_to_objects(objects, bodies):
+def pairing_object_to_bodies(objects, bodies):
     pairs = []
     for o, obj in enumerate(objects):
         min_distance, body_pair = sys.maxsize, -1
@@ -162,34 +180,47 @@ def body_crop(pairs, objects, bodies, img):
     return final_bodies
             
 def save_pair_results(pairs, objects, bodies, img, saveName):
-    ratio = 1
+    ratio = 2
     im0 = img.copy()
     annotator = Annotator(im0, line_width=2)
-    weapon_color = (0, 0, 255)
-    for o, obj in enumerate(objects):
-        line_body = -1
-        for pair_obj, pair_body in pairs:
-            if o == pair_obj:
-                line_body = pair_body
-                break
+    color_id = 0
+    bodies_found = {}
+    for obj_id, body_id in pairs:
+        body = bodies[body_id]
+        obj  = objects[obj_id]
+        if body_id not in bodies_found:
+            pair_color = RCOLORS[color_id]
+            label = f'{body.name} {body.conf:.2f}'
+            annotator.box_label(body.box, label, color=pair_color)
+            bodies_found[body_id] = pair_color
+            color_id += 1
+            if color_id == NUM_RCOLORS:
+                color_id = 0 
+        else:
+            pair_color = bodies_found[body_id]            
         label = f'{obj.name} {obj.conf:.2f}'
-        annotator.box_label(obj.box, label, color=weapon_color)
-        center = obj.center
-        annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=(255,240,0))
-        if line_body != -1:
-            annotator.line(obj.center, bodies[line_body].center, color=weapon_color)
-        
-    for b, body in enumerate(bodies):
-        color = (255, 0, 0)
-        for pair_obj, pair_body in pairs:
-            if b == pair_body:
-                color = (0, 255, 0)
-                break
-        label = f'{body.name} {body.conf:.2f}'
-        annotator.box_label(body.box, label, color=color)
-        center = body.center
-        annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=(255,240,0))
+        annotator.box_label(obj.box, label, color=pair_color)
+        annotator.line(obj.center, body.center, color=pair_color)
 
+    found = False
+    for o_id, obj in enumerate(objects):
+        for pairObj_id, pairBody_id in pairs:
+            if o_id == pairObj_id:
+                found = True
+                break
+        if not found:
+            label = f'{obj.name} {obj.conf:.2f}'
+            annotator.box_label(obj.box, label, color=RED_COLOR)
+                        
+    found = False
+    for b_id, body in enumerate(bodies):
+        for pairObj_id, pairBody_id in pairs:
+            if b_id == pairBody_id:
+                found = True
+                break
+        if not found:
+            label = f'{body.name} {body.conf:.2f}'
+            annotator.box_label(body.box, label, color=RED_COLOR)
 
     im0 = annotator.result()
     cv2.imwrite(saveName, im0)
