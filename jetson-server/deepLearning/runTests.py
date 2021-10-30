@@ -25,8 +25,9 @@ if __name__ == "__main__":
     pairs = pairing_bodies_to_objects(weapons, bodies) 
     bodies_crop = body_crop(pairs, weapons, bodies, img)
     t1 = time.time()
+
     print("[*] Pairing and cropping Done in %0.2f(s)" % (t1 - t0))    
     save_pair_results(pairs, weapons, bodies, img, "results.jpg")
 
-    for i, b in enumerate(bodies_crop):
-        cv2.imwrite("crops/crop-"+str(i)+".jpg", b[0])
+    #for i, b in enumerate(bodies_crop):
+    #cv2.imwrite("crops/crop-"+str(i)+".jpg", b[0])

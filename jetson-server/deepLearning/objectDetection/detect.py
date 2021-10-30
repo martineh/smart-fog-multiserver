@@ -165,20 +165,19 @@ def save_pair_results(pairs, objects, bodies, img, saveName):
     ratio = 1
     im0 = img.copy()
     annotator = Annotator(im0, line_width=2)
+    weapon_color = (0, 0, 255)
     for o, obj in enumerate(objects):
-        color = (255, 0, 0)
         line_body = -1
         for pair_obj, pair_body in pairs:
             if o == pair_obj:
                 line_body = pair_body
-                color = (0, 255, 0)
                 break
         label = f'{obj.name} {obj.conf:.2f}'
-        annotator.box_label(obj.box, label, color=color)
+        annotator.box_label(obj.box, label, color=weapon_color)
         center = obj.center
-        annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=color)
+        annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=(255,240,0))
         if line_body != -1:
-            annotator.line(obj.center, bodies[line_body].center)
+            annotator.line(obj.center, bodies[line_body].center, color=weapon_color)
         
     for b, body in enumerate(bodies):
         color = (255, 0, 0)
@@ -189,7 +188,7 @@ def save_pair_results(pairs, objects, bodies, img, saveName):
         label = f'{body.name} {body.conf:.2f}'
         annotator.box_label(body.box, label, color=color)
         center = body.center
-        annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=color)
+        annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=(255,240,0))
 
 
     im0 = annotator.result()
