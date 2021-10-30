@@ -85,7 +85,6 @@ class ObjectDetection:
                  augment=False,
                  hide_labels=False,
                  half=True):
-        t0 = time_sync()
         self.device='' 
         self.imgsz=imgsz
         self.conf_thres=conf_thres
@@ -116,11 +115,6 @@ class ObjectDetection:
         # Run inference
         if self.device.type != 'cpu':
             self.model(torch.zeros(1, 3, *self.imgsz).to(self.device).type_as(next(self.model.parameters())))  # run once
-
-        t1 = time_sync()
-
-        print("[*] Model '%s' Loaded in %0.2f(s)" % (weights, (t1 - t0)))
-
 
     def do_inference(self, im0s, class_filter=[]):
         objects = []    
@@ -197,15 +191,19 @@ def save_pair_results(pairs, objects, bodies, img, saveName):
     annotator = Annotator(im0, line_width=2)
     for o, obj in enumerate(objects):
         color = (255, 0, 0)
+        line_body = -1
         for pair_obj, pair_body in pairs:
             if o == pair_obj:
+                line_body = pair_body
                 color = (0, 255, 0)
                 break
         label = f'{obj.name} {obj.conf:.2f}'
         annotator.box_label(obj.box, label, color=color)
         center = obj.center
         annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=color)
-
+        if line_body != -1:
+            annotator.line(obj.center, bodies[line_body].center)
+        
     for b, body in enumerate(bodies):
         color = (255, 0, 0)
         for pair_obj, pair_body in pairs:

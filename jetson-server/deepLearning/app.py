@@ -7,8 +7,11 @@ import time
 if __name__ == "__main__":
     img = cv2.imread(sys.argv[1])
 
+    t0 = time.time()
     bodyOD   = ObjectDetection("./yoloV5Wrap/models-smartFog/yolov5s.pt")
     weaponOD = ObjectDetection("./yoloV5Wrap/models-smartFog/weapons.pt")
+    t1 = time.time()
+    print("[*] Models Loaded in %0.2f(s)" % (t1 - t0))
     print("[*] Running inference...")
     t0 = time.time()
     bodies  = bodyOD.do_inference(img, class_filter=['person'])
