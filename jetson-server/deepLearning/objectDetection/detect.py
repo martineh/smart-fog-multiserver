@@ -1,5 +1,3 @@
-# YOLOv5 🚀 by Ultralytics, GPL-3.0 license
-
 import argparse
 import os
 import sys
@@ -17,38 +15,16 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 from models.experimental import attempt_load
-from utils.datasets import LoadImages, LoadStreams
-from utils.general import apply_classifier, check_img_size, check_imshow, check_requirements, check_suffix, colorstr, \
+from yoloV5Utils.datasets import LoadImages, LoadStreams
+from yoloV5Utils.general import apply_classifier, check_img_size, check_imshow, check_requirements, check_suffix, colorstr, \
     increment_path, non_max_suppression, print_args, save_one_box, scale_coords, set_logging, \
     strip_optimizer, xyxy2xywh
-from utils.plots import Annotator, colors
-from utils.torch_utils import load_classifier, select_device, time_sync
-from utils.augmentations import letterbox
+from yoloV5Utils.plots import Annotator, colors
+from yoloV5Utils.torch_utils import load_classifier, select_device, time_sync
+from yoloV5Utils.augmentations import letterbox
 from PIL import Image
 from numpy import asarray
 import time
-
-#------------------------------------#
-#  GLOBAL VARIABLES CONFIGURACIONES  #
-#------------------------------------#
-
-
-
-#------------------------------------#
-# SET CONFIGURATION AND LOAD MODELS  #
-#------------------------------------#
-
-#def pixel_centered(box):
-#    c1, c2 = (box[0], box[1]), (box[2], box[3])
-#    x0, y0 = c1
-#    x1, y1 = c2
-#    width  = x1 - x0
-#    height = y1 - y0
-#    return (x0 + int(width/2), y0 + int(height/2))
-
-#def get_distance(p0, p1):
-#    diff = (p0[0] - p1[0], p0[1] - p1[1])
-#    return torch.sqrt(diff[0]*diff[0] + diff[1]*diff[1])            
 
 
 class Detection:
@@ -73,7 +49,7 @@ class Detection:
         
         return (x0 + int(width/2), y0 + int(height/2))
 
-class ObjectDetection:
+class YoloV5OD:
     def __init__(self,
                  weights,
                  imgsz=[640, 640],
