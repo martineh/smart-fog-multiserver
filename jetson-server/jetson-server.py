@@ -14,7 +14,22 @@ import argparse
 from datetime import datetime
 
 #Deep learning
+from objectDetection.detect import YoloV5OD
+from objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
+ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
+
+WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
+           ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
+           ROOT_WEIGHTS+"face_detection_yolov5s.pt"]
+
+load_t0  = time.time()
+bodyOD   = YoloV5OD(WEIGHTS[0], conf_thres=0.2)
+load_t1  = time.time()
+weaponOD = YoloV5OD(WEIGHTS[1], conf_thres=0.2)
+load_t2  = time.time()
+faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.2)
+load_t3  = time.time()
 
 
 #------------ Global Variables ------------#
@@ -27,6 +42,7 @@ imgData_conn = {} #Dicctionary for each host and its image
 totImg_conn  = {} #Dicctiorary for each host and the total number of image received
 
 PRINT_LIM    = 10
+
 #- Input variables
 debug        = False
 write        = False
@@ -72,15 +88,23 @@ def timing_handler(frameTot, tTot, fps):
 def apply_deepLearning(image):
     if level == 1:
         #weapong and body detection
-        info, result = wD.detect_weapon_to_body(image)
+        bodiesKnifes  = bodyOD.do_inference(image, class_filter=['person', 'knife'])
+        weapons = weaponOD.do_inference(image)
+        bodies = []
+        for obj in bodiesKnifes:
+            bodies.append(obj) if obj.name == 'person' else weapons.append(obj) 
+        pairs = pairing_object_to_bodies(weapons, bodies) 
+        bodies_crop = body_crop(pairs, weapons, bodies, image)
+        results = body for body, weapon in bodies_crop
     elif level == 2:
         #face detection
-        result = fD.face_detector(image)
+        faces  = faceOD.do_inference(image)
+        results = face_crop(faces, image)
     elif level == 3:
         #face identify
-        names = fD.face_identify(image)
-        result = [image, names]
-
+        #names = fD.face_identify(image)
+        #result = [image, names]
+        pass
     if debug:
         if level == 1:
             if len(result) > 0:
@@ -89,7 +113,7 @@ def apply_deepLearning(image):
                       "[Guns:" + str(info["gun"]) + ", " + "Knifes:" + str(info["knife"]) + "]" + bcolors.ENDC)
         elif level == 2:
             log = log_msg()
-            if result is not None:
+            if results is not None:
                 print(log + "DEEP LEARNING Face detected.")
             else:
                 print(log + "DEEP LEARNING Person received but face NOT detected.")
@@ -99,7 +123,7 @@ def apply_deepLearning(image):
                 print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + str(result[1]) + bcolors.ENDC)
             else:
                 print(log + "DEEP LEARNING Face received but NOT identified.")                
-    return result
+    return results
 
 class imgDataConn():
     def __init__(self):
