@@ -14,8 +14,8 @@ import argparse
 from datetime import datetime
 
 #Deep learning
-from objectDetection.detect import YoloV5OD
-from objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
+from deepLearning.objectDetection.detect import YoloV5OD
+from deepLearning.objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
 ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
 
@@ -95,7 +95,7 @@ def apply_deepLearning(image):
             bodies.append(obj) if obj.name == 'person' else weapons.append(obj) 
         pairs = pairing_object_to_bodies(weapons, bodies) 
         bodies_crop = body_crop(pairs, weapons, bodies, image)
-        results = body for body, weapon in bodies_crop
+        results = [body for body, weapon in bodies_crop]
     elif level == 2:
         #face detection
         faces  = faceOD.do_inference(image)
@@ -505,9 +505,7 @@ if __name__ == "__main__":
     #--Server-Python That Receives from C++/Py
     if level == 1:
         # START SERVER: [C++] -> [Py]
-        import deepLearning.weapon_detection as wD
         server_start(handle_client_C, server_addr)
     else:
         # START SERVER: [Py]  -> [Py]
-        import deepLearning.face_detection  as fD
         server_start(handle_client_Py, server_addr)
