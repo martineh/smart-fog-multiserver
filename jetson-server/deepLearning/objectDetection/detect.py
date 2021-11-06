@@ -67,6 +67,11 @@ class Detection:
         
         return (x0 + int(width/2), y0 + int(height/2))
 
+    def __str__(self):
+        _str_ = "  [*] Detection: '%s', Conf: %0.2f, Box: (%d, %d), (%d, %d)" % (self.name,
+                self.conf, int(self.box[0]), int(self.box[1]), int(self.box[2]), int(self.box[3]))
+        return _str_
+    
 class YoloV5OD:
     def __init__(self,
                  weights,
@@ -79,6 +84,7 @@ class YoloV5OD:
                  augment=False,
                  hide_labels=False,
                  half=True):
+        self.weights = weights
         self.device='' 
         self.imgsz=imgsz
         self.conf_thres=conf_thres
@@ -135,6 +141,7 @@ class YoloV5OD:
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0.shape).round()
                 for *box, conf, cls in reversed(det):
                     c = int(cls)  # integer class
+                    #print("[%s] - Detected name: %s, conf: %0.2f" % (self.weights, self.names[c], conf))
                     if len(class_filter) == 0:
                         objects.append(Detection(box, conf, c, self.names[c]))
                     elif self.names[c] in class_filter:
@@ -146,10 +153,10 @@ class YoloV5OD:
         im0 = img.copy()
         annotator = Annotator(im0, line_width=2, example=str(self.names))
         for obj in objects:
-            label = f'{obj.name} {obj.conf:.2f}'
-            annotator.box_label(obj.box, obj.name, color=colors(obj.c, True))
+            label = ""
+            annotator.box_label(obj.box, label, color=colors(obj.c, True))
             center = obj.center
-            annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=colors(obj.c, True))
+            #annotator.box_label([center[0], center[1] - ratio, center[0] + ratio, center[1] + ratio], color=colors(obj.c, True))
         
         im0 = annotator.result()
         cv2.imwrite(imgName, im0)
@@ -157,6 +164,7 @@ class YoloV5OD:
 
 def pairing_object_to_bodies(objects, bodies):
     pairs = []
+
     for o, obj in enumerate(objects):
         min_distance, body_pair = sys.maxsize, -1
         for b, body in enumerate(bodies):
@@ -174,23 +182,32 @@ def body_crop(pairs, objects, bodies, img):
     bodies_cropped = []
     for pair_obj, pair_body in pairs:
         if pair_body not in bodies_cropped:
-            crop = save_one_box(bodies[pair_body].box, img, save=False)
+            crop = save_one_box(bodies[pair_body].box, img, BGR=True, save=False)
             final_bodies.append([crop, objects[pair_obj].name])
             bodies_cropped.append(pair_body)
     return final_bodies
-            
-def save_pair_results(pairs, objects, bodies, img, saveName):
+
+def face_crop(faces, img_body):
+    faces_cropped = []
+    for face in faces:
+        face_cropped = save_one_box(face.box, img_body, BGR=True, save=False)
+        faces_cropped.append(face_cropped)
+    return faces_cropped
+
+def save_pair_results(pairs, objects, bodies, img, saveName, verbose=False):
     ratio = 2
     im0 = img.copy()
     annotator = Annotator(im0, line_width=2)
     color_id = 0
     bodies_found = {}
+
     for obj_id, body_id in pairs:
         body = bodies[body_id]
         obj  = objects[obj_id]
         if body_id not in bodies_found:
             pair_color = RCOLORS[color_id]
             label = f'{body.name} {body.conf:.2f}'
+            if verbose: print(body) 
             annotator.box_label(body.box, label, color=pair_color)
             bodies_found[body_id] = pair_color
             color_id += 1
@@ -199,27 +216,30 @@ def save_pair_results(pairs, objects, bodies, img, saveName):
         else:
             pair_color = bodies_found[body_id]            
         label = f'{obj.name} {obj.conf:.2f}'
+        if verbose: print(obj) 
         annotator.box_label(obj.box, label, color=pair_color)
         annotator.line(obj.center, body.center, color=pair_color)
 
-    found = False
     for o_id, obj in enumerate(objects):
+        found = False
         for pairObj_id, pairBody_id in pairs:
             if o_id == pairObj_id:
                 found = True
                 break
         if not found:
             label = f'{obj.name} {obj.conf:.2f}'
+            if verbose: print(obj) 
             annotator.box_label(obj.box, label, color=RED_COLOR)
                         
-    found = False
     for b_id, body in enumerate(bodies):
+        found = False
         for pairObj_id, pairBody_id in pairs:
             if b_id == pairBody_id:
                 found = True
                 break
         if not found:
             label = f'{body.name} {body.conf:.2f}'
+            if verbose: print(body) 
             annotator.box_label(body.box, label, color=RED_COLOR)
 
     im0 = annotator.result()
