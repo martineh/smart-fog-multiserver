@@ -127,4 +127,5 @@ if __name__ == "__main__":
     if opt.faces:
         print("Timing Faces Inference (%d Bodies Processed):" % (tot_faces))
         print("    [*] TOTAL Time per image      :  %0.2f(s) " % (face_time / tot_faces))
+        print("Total Timing (Weapons + Bodies + Faces) : %0.2f(s)" % ((face_time / tot_faces) + ((inf_time + post_time) / len(files))))
     print("==========================================================")

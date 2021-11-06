@@ -95,7 +95,14 @@ def apply_deepLearning(image):
             bodies.append(obj) if obj.name == 'person' else weapons.append(obj) 
         pairs = pairing_object_to_bodies(weapons, bodies) 
         bodies_crop = body_crop(pairs, weapons, bodies, image)
-        results = [body for body, weapon in bodies_crop]
+        results = []
+        info = {}
+        for body, weapon in bodies_crop:
+            results.append(body)
+            if weapon not in info:
+                info[weapon] += 1
+            else:
+                info[weapon] = 1
     elif level == 2:
         #face detection
         faces  = faceOD.do_inference(image)
@@ -104,13 +111,15 @@ def apply_deepLearning(image):
         #face identify
         #names = fD.face_identify(image)
         #result = [image, names]
-        pass
+        results = []
     if debug:
         if level == 1:
-            if len(result) > 0:
+            if len(results) > 0:
                 log = log_msg()
-                print(log + "DEEP LEARNING A person with a weapon detected: "+ bcolors.OKCYAN + 
-                      "[Guns:" + str(info["gun"]) + ", " + "Knifes:" + str(info["knife"]) + "]" + bcolors.ENDC)
+                weapons_log = ""
+                for item in info:
+                    weapons_log = weapons_log + "'%s' : %d " % (item, str(info[item]))
+                print(log + "DEEP LEARNING A person with a weapon detected: "+ bcolors.OKCYAN + weapons_log + bcolors.ENDC)
         elif level == 2:
             log = log_msg()
             if results is not None:
@@ -119,7 +128,7 @@ def apply_deepLearning(image):
                 print(log + "DEEP LEARNING Person received but face NOT detected.")
         elif level == 3:
             log = log_msg()
-            if len(result) > 0:
+            if len(results) > 0:
                 print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + str(result[1]) + bcolors.ENDC)
             else:
                 print(log + "DEEP LEARNING Face received but NOT identified.")                
