@@ -1,0 +1,12 @@
+<Root>
+    <IpToSend>192.168.1.61</IpToSend>
+    <PortToSend>5000</PortToSend>
+    <ResolutionToSend>640x480</ResolutionToSend>
+    <FramesPerSecond>30</FramesPerSecond>
+    <ColorImage>1</ColorImage>
+    <ReducedSpatialResolution>640x480</ReducedSpatialResolution>
+    <ReducedColorResolutionInBits>1</ReducedColorResolutionInBits>
+    <BackgroundAverage>30</BackgroundAverage>
+    <PixelThreshold>5</PixelThreshold>
+    <ImageThreshold>1</ImageThreshold>
+</Root>

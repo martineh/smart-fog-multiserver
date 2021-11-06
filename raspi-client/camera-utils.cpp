@@ -1,7 +1,8 @@
-#include "camera-utils.hpp"
+#include "camera-utils.hpp" 
 
 /****   D E F I N E    S E C T I O N   *******/
-//* For the Camera 
+//* For logs
+#define PRINT_LIM 10
 
 //* For the TCP/IP Conection
 #define PORT 5050
@@ -9,13 +10,18 @@
 #define MAX_UDP_PACK 65000
 
 //* For the Queue
-#define QUEUE_MAX_FRAMES   30
+#define QUEUE_MAX_FRAMES   10
 
 //* For Threads
 #define BACKGROUND_AVERAGE 30
 #define THRESHOLD_PX       5
 #define THRESHOLD_SEND     5
 
+#define ERROR_CODE   0
+#define LOG_CODE     1
+#define WARNING_CODE 2
+#define TIMING_CODE  3
+#define OK_CODE      4
 
 /**** G L O B A L    V A R I A B L E S *******/
 extern queue<Mat> q_capture;
@@ -27,6 +33,13 @@ extern pthread_mutex_t m_send;
 extern int items;
 extern int items_send;
 
+extern bool finished;
+
+extern char *date_str;
+
+//GLOBAL VARIABLE FOR DEBUG (PATH TO THE IMAGE)
+extern char *img_path;
+extern bool debug;
 
 /*****  T I M I N G    F U N C T I O N  *****/
 void timerStart(timeval *t_start) {
@@ -44,12 +57,61 @@ double getTime(timeval t_start, timeval t_stop) {
 }
 
 
+char *getDateAndTime(char *date_str) {
+  std::time_t now = std::time(0);
+  tm *ltm = localtime(&now);
+  sprintf(date_str, "[%02d/%02d/%d %02d:%02d:%02d]", ltm->tm_mday, 1 + ltm->tm_mon, 1900 + ltm->tm_year,
+	  ltm->tm_hour,ltm->tm_min,ltm->tm_sec);
+
+  return date_str;  
+
+}
+
+char *getLogCode(int code, char *code_str) {
+
+  switch(code) {
+      case ERROR_CODE:
+	sprintf(code_str, "%s", "[\x1B[31mERROR\033[0m]");
+	break;
+      case LOG_CODE:
+	sprintf(code_str, "%s", "[\x1B[93mLOG\033[0m]");
+	break;
+      case WARNING_CODE:
+	sprintf(code_str, "%s", "[\x1B[33mWARNING\033[0m]");
+	break;
+      case TIMING_CODE:
+	sprintf(code_str, "%s", "[\x1B[94mTIMING\033[0m]");
+	break;
+      case OK_CODE:
+	sprintf(code_str, "%s", "[\x1B[92mOK\033[0m]");
+	break;
+
+  }
+
+  return code_str;
+  
+}
+
+char *getPrintMsg(int code, char *log_msg) {
+  char date_str[128];
+  char code_str[64];
+  
+  getLogCode(code, code_str);
+  getDateAndTime(date_str);
+  
+  sprintf(log_msg, "%s%s ", code_str, date_str);
+
+  return log_msg;
+}
+
 /*****  Q U E U E    F U N C T I O N  *****/
 void insert_capture(Mat img) {
   pthread_mutex_lock(&m);
   if (items < QUEUE_MAX_FRAMES) {
     q_capture.push(img);
     items++;
+  } else {
+    std::cout << "Queue max:" << items << std::endl;
   }
   pthread_mutex_unlock(&m);
 }
@@ -75,6 +137,8 @@ void insert_send(Mat img) {
   if (items < QUEUE_MAX_FRAMES) {
     q_send.push(img);
     items_send++;
+  } else {
+    std::cout << "Queue max:" << items << std::endl;
   }
   pthread_mutex_unlock(&m_send);
 }
@@ -264,31 +328,33 @@ Mat colorImageReduction(Mat img, int numBits) {
 }
 
 // Change image resolution with the same image size
+//TODO: Memory leak, WTF?
 Mat changeImageResolution(Mat img, int rows, int cols) {
   Mat outImage;
   Mat resizedImage;
-  Size newSize(rows, cols);
-  Size OriginalSize(img.cols, img.rows);
+  Size originalSize(img.cols, img.rows);
+  Size newSize(cols, rows);
 
+  
   resize(img, resizedImage, newSize);//resize image
-  resize(resizedImage, outImage, OriginalSize);//resize image
+  resize(resizedImage, img, originalSize);//resize image
 
-  resizedImage.release();
-  img.release();
-  return outImage;
+  //resizedImage.release();
+  //img.release();
+  
+  return img;//outImage;
 }
 
 Mat imageTransformHandler(Mat img, int colorReduction, 
 			  int rowsReduction, int colsReduction,
 			  bool enableTransform) {
   if (enableTransform) {
-    if (colorReduction != 1)
+    if (colorReduction != 1) {
       img = colorImageReduction(img, colorReduction);
-    
+    }
     if((img.rows != rowsReduction) ||
        (img.cols != colsReduction)) {
-      std::cout << img.rows << "x" << img.cols << "," << rowsReduction << "x" << colsReduction << std::endl;
-      img = changeImageResolution(img, rowsReduction, colsReduction);
+      //img = changeImageResolution(img, rowsReduction, colsReduction);
     }
   }
   
@@ -299,8 +365,18 @@ Mat imageTransformHandler(Mat img, int colorReduction,
 
 //= C A P T U R E    F R A M E S =//
 void *getFrame(void *input) {
+
+  if (debug) {
+    std::cout << "IMAGE PATH:" << img_path << std::endl;
+    Mat img = imread(img_path, IMREAD_COLOR);
+    insert_capture(img);
+
+    finished = true;
+    return NULL;
+  }
+  
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
-  VideoCapture cap(0); //VideoCapture From 0
+  VideoCapture cap(0, cv::CAP_V4L); //VideoCapture From 0
   Mat img;
   
   if(!cap.isOpened()) {
@@ -309,20 +385,28 @@ void *getFrame(void *input) {
   }
 
   //Image Size Fixed
-  cap.set(cv::CAP_PROP_FRAME_WIDTH,  xmlConfig->numRows);
-  cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numCols);
+  cap.set(cv::CAP_PROP_FRAME_WIDTH,  xmlConfig->numCols);
+  cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numRows);
   
   while (true) {
     cap >> img;
     insert_capture(img);//img.clone());
   }
 
+  finished = true;
   return NULL; 
 }
 
 
 //= P R O C E S S    F R A M E S =//
 void *processFrame(void *input) {
+
+  if (debug) {
+    Mat img = pop_capture();
+    insert_send(img);
+    return NULL;
+  }
+
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   Mat img, background;
   
@@ -332,15 +416,14 @@ void *processFrame(void *input) {
   
   background = calculateBackground(xmlConfig->bAverage);
   
-  while(true) {
+  while(!finished) {
     img = pop_capture();
     int threshold = differenceRatioBackground(background, img, xmlConfig->pxThreshold);
     if (threshold > xmlConfig->imgThreshold) {
-      std::cout << "[INFO] Movement Detection: " << threshold << "(ratio)" << std::endl;
       img = imageTransformHandler(img, colorReduction, rowsReduction, colsReduction, true);
       insert_send(img);
-    } else
-      img.release();
+    }
+      //img.release();
   }
   
   return NULL;  
@@ -349,14 +432,22 @@ void *processFrame(void *input) {
 
 //= S E N D    F R A M E S =// 
 void *sendFrame(void *input) {  
+
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   int sockfd; 
   struct sockaddr_in servaddr;
   
+  char log_str[256];
+  char code_str[128];
+
+  size_t n_frames = 0;
+  timeval t_start, t_stop;
+
+  double t_global = 0;
   // socket create and varification 
   sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-  if (sockfd == -1) { 
-    std::cout << "[ERROR] Socket creation failed" << std::endl;
+  if (sockfd == -1) {
+    std::cout << getPrintMsg(ERROR_CODE, log_str) << "Connecting with the server failed." << std::endl;
     exit(-1); 
   } 
   
@@ -367,26 +458,45 @@ void *sendFrame(void *input) {
   
   // connect the client socket to server socket 
   if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
-    std::cout << "[ERROR] Connection with the server failed" << std::endl;
+    std::cout << getPrintMsg(ERROR_CODE, log_str) << "Connecting with the server failed." << std::endl;
     exit(-1); 
   } 
 
   Mat img;
   unsigned int max_buff;
   unsigned char *imgPackBuff;
-  
-  while(true) {
+
+  std::cout <<  getPrintMsg(LOG_CODE, log_str) << "CLIENT started on " <<
+    xmlConfig->ip << ":" << xmlConfig->port << " " << getLogCode(OK_CODE, code_str) << std::endl;
+
+  timerStart(&t_start);
+  while(!finished) {
     img = pop_send();
+
     imgPackBuff = newImageVectorPack(img, &max_buff);
+    //if (debug)
+    //std::cout << "[CLIENT] Send image of " << max_buff << "(bytes)" << std::endl;    
     size_t b = write(sockfd, imgPackBuff, max_buff);
+    //sleep(30);
     if (b == 0)
       std::cout << "[WARNING] No data writed to the server." << std::endl;
+
     free(imgPackBuff);
     img.release();
+
+    n_frames += 1;
+    if ((n_frames % PRINT_LIM) == 0) {
+        timerStop(&t_stop);
+	double t_total = getTime(t_start, t_stop);
+	t_global += t_total;
+	printf("%sCLIENT %d frames captured in %0.2f(s) [%0.2f(fps)]\r",
+	       getPrintMsg(TIMING_CODE, log_str), n_frames, t_global,  PRINT_LIM / t_total);
+	fflush(stdout);
+	timerStart(&t_start);
+    }    
   }
   
   close(sockfd);
   
   return NULL;
 }
-
