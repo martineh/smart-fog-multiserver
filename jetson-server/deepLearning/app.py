@@ -1,9 +1,9 @@
 import weapon_detection as wD
-import face_detection  as fD
+#import face_detection  as fD
 
 import sys
 import cv2
-
+import time
 #import face_recognition
 #image = face_recognition.load_image_file(sys.argv[1])
 #face_locations = face_recognition.face_locations(image)
@@ -11,12 +11,18 @@ import cv2
 #print (face_locations)
 #sys.exit(-1)
 
+print ("************ START DETECTION ******************")
+t0 = time.time()
 image = cv2.imread(sys.argv[1])
 info, bodies = wD.detect_weapon_to_body(image)
+t1 = time.time()
 
 if bodies == None:
     print("Nothing Detected")
-    
+
+print ("Timing %0.2f" %(t1 - t0))
+print ("************ STOP DETECTION ******************")
+
 #image = cv2.resize(image, (800, 600))
 #face = dL.face_detector(image)
 #names = dL.face_identify(face)
@@ -24,6 +30,7 @@ if bodies == None:
 #sys.exit(-1)
 
 #info, body_list = dL.body_weapon_detector(image)
+'''
 print(info)
 for body in bodies:
     print("Body detected")
@@ -36,7 +43,7 @@ for body in bodies:
     else:
         print("Face Not Detected")
 
-
+'''
 
 #
 

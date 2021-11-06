@@ -60,7 +60,6 @@ def crop_image(box, image):
 #-------------------------------------------------------------------------
 #                   L O A D    M O D E L S    Y O L O    V 5
 #-------------------------------------------------------------------------
-
 weapon_model = torch.hub.load('ultralytics/yolov5', 'custom',
                               path_or_model=config_path+"/models/weapons.pt")
 
