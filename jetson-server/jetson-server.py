@@ -273,20 +273,10 @@ def handle_client_Py(conn, addr):
         decimg=cv2.imdecode(data,1)
         if deepL:
             #Process Image (Neuronal Network)
-            output = apply_deepLearning(decimg)
-            if output is not None:
-                task_queue.put(output)
+            list_results = apply_deepLearning(decimg)
+            task_queue.put(img) for img in list_results                
         else:
             task_queue.put(decimg)
-
-        #frameTot += 1
-        #if (frameTot % PRINT_LIM) == 0:
-        #if first:
-        #t0 = time.time()
-        #first=False
-        #frameTot = 1
-        #t_tot = (time.time() - t0)
-        #timing_handler(frameTot, t_tot, frameTot / tTot)
 
     conn.close()
     
