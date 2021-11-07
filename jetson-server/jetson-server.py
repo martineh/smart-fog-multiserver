@@ -100,9 +100,9 @@ def apply_deepLearning(image):
         for body, weapon in bodies_crop:
             results.append(body)
             if weapon not in info:
-                info[weapon] += 1
-            else:
                 info[weapon] = 1
+            else:
+                info[weapon] += 1
     elif level == 2:
         #face detection
         faces  = faceOD.do_inference(image)
@@ -118,7 +118,7 @@ def apply_deepLearning(image):
                 log = log_msg()
                 weapons_log = ""
                 for item in info:
-                    weapons_log = weapons_log + "'%s' : %d " % (item, str(info[item]))
+                    weapons_log = weapons_log + "'%s' : %d " % (item, info[item])
                 print(log + "DEEP LEARNING A person with a weapon detected: "+ bcolors.OKCYAN + weapons_log + bcolors.ENDC)
         elif level == 2:
             log = log_msg()
