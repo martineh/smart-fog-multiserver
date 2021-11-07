@@ -274,7 +274,7 @@ def handle_client_Py(conn, addr):
         if deepL:
             #Process Image (Neuronal Network)
             list_results = apply_deepLearning(decimg)
-            task_queue.put(img) for img in list_results                
+            for img in list_results: task_queue.put(img)
         else:
             task_queue.put(decimg)
 
