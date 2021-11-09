@@ -18,6 +18,7 @@ from deepLearning.objectDetection.detect import YoloV5OD
 from deepLearning.objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
 ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
+ROOT_FACES_DB = "./faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
            ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
@@ -30,7 +31,8 @@ weaponOD = YoloV5OD(WEIGHTS[1], conf_thres=0.2)
 load_t2  = time.time()
 faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.2)
 load_t3  = time.time()
-
+faceIdentity = faceIdentity(ROOT_FACES_DB)
+load_t4  = time.time()
 
 #------------ Global Variables ------------#
 task_queue   = queue.Queue(20)
@@ -109,9 +111,8 @@ def apply_deepLearning(image):
         results = face_crop(faces, image)
     elif level == 3:
         #face identify
-        #names = fD.face_identify(image)
-        #result = [image, names]
-        results = []
+        results = faceIdentity.identify(image)
+        
     if debug:
         if level == 1:
             if len(results) > 0:
@@ -129,7 +130,8 @@ def apply_deepLearning(image):
         elif level == 3:
             log = log_msg()
             if len(results) > 0:
-                print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + str(result[1]) + bcolors.ENDC)
+                for ident in results:
+                    print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + ident[0] + bcolors.ENDC)
             else:
                 print(log + "DEEP LEARNING Face received but NOT identified.")                
     return results
