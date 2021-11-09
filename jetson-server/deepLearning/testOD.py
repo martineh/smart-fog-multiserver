@@ -8,8 +8,10 @@ from os.path import isfile, join
 
 from objectDetection.detect import YoloV5OD
 from objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
+from faceIdentify.detect    import faceIdentity
 
-ROOT_WEIGHTS = "./objectDetection/yoloV5-weights/"
+ROOT_WEIGHTS  = "./objectDetection/yoloV5-weights/"
+ROOT_FACES_DB = "./faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
            ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
@@ -64,11 +66,13 @@ if __name__ == "__main__":
     load_t2  = time.time()
     if opt.faces:
         faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.2)
+        faceIdentity = faceIdentity(ROOT_FACES_DB)
+        
     load_t3  = time.time()
 
 
-    tot_faces = 0    
-    inf_time, post_time, face_time  = 0, 0, 0
+    tot_bodies, tot_faces = 0, 0
+    inf_time, post_time, face_time, identify_time  = 0, 0, 0, 0
     for f in files:
         img = cv2.imread(f)
         if opt.verbose:
@@ -98,7 +102,7 @@ if __name__ == "__main__":
         #Save Body Crops
         cropPath = outCropsPath + "/" + os.path.splitext(os.path.basename(f))[0]
         os.mkdir(cropPath)
-        tot_faces += len(bodies_crop)
+        tot_bodies += len(bodies_crop)
         for i, b in enumerate(bodies_crop):
             body_name = cropPath + "/body-"+str(i)+".jpg"
             if opt.faces:
@@ -106,6 +110,12 @@ if __name__ == "__main__":
                 faces  = faceOD.do_inference(b[0])
                 faces_crop = face_crop(faces, b[0])
                 face_time += (time.time() - t0)
+                tot_faces += len(faces_crop)
+                t0 = time.time()
+                for face in faces_crop:
+                    identities = faceIdentity.identify(face)
+                    for ident in identities: print("Identify: %s " % (ident)) 
+                    identify_time += (time.time() - t0)
                 faceOD.save_results(body_name, b[0], faces)
             else:
                 cv2.imwrite(body_name, b[0])
@@ -125,6 +135,11 @@ if __name__ == "__main__":
     print("    [*] Preprocess Time per image :  %0.2f(s) " % (post_time / len(files)))
     print("    [*] TOTAL Time per image      :  %0.2f(s) " % ((inf_time + post_time) / len(files)))
     if opt.faces:
-        print("Timing Faces Inference (%d Bodies Processed):" % (tot_faces))
-        print("    [*] TOTAL Time per image      :  %0.2f(s) " % (face_time / tot_faces))
+        print("Timing Faces Inference (%d Bodies Processed):" % (tot_bodies))
+        print("    [*] TOTAL Time per image      :  %0.2f(s) " % (face_time / tot_bodies))
+        print("Timing Faces Identify  (%d Faces Processed) :" % (tot_faces))
+        print("    [*] TOTAL Time per image      :  %0.2f(s) " % (identify_time / tot_faces))
+        print("Total Timing (Weapons + Bodies + Faces + Face Identify) : %0.2f(s)" % ((face_time / tot_bodies) +
+                                                                                      ((inf_time + post_time) / len(files)) +
+                                                                                      ((identify_time) / tot_faces)))
     print("==========================================================")

@@ -18,6 +18,7 @@ from deepLearning.objectDetection.detect import YoloV5OD
 from deepLearning.objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
 ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
+ROOT_FACES_DB = "./faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
            ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
@@ -30,7 +31,8 @@ weaponOD = YoloV5OD(WEIGHTS[1], conf_thres=0.2)
 load_t2  = time.time()
 faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.2)
 load_t3  = time.time()
-
+faceIdentity = faceIdentity(ROOT_FACES_DB)
+load_t4  = time.time()
 
 #------------ Global Variables ------------#
 task_queue   = queue.Queue(20)
@@ -95,22 +97,30 @@ def apply_deepLearning(image):
             bodies.append(obj) if obj.name == 'person' else weapons.append(obj) 
         pairs = pairing_object_to_bodies(weapons, bodies) 
         bodies_crop = body_crop(pairs, weapons, bodies, image)
-        results = [body for body, weapon in bodies_crop]
+        results = []
+        info = {}
+        for body, weapon in bodies_crop:
+            results.append(body)
+            if weapon not in info:
+                info[weapon] = 1
+            else:
+                info[weapon] += 1
     elif level == 2:
         #face detection
         faces  = faceOD.do_inference(image)
         results = face_crop(faces, image)
     elif level == 3:
         #face identify
-        #names = fD.face_identify(image)
-        #result = [image, names]
-        pass
+        results = faceIdentity.identify(image)
+        
     if debug:
         if level == 1:
-            if len(result) > 0:
+            if len(results) > 0:
                 log = log_msg()
-                print(log + "DEEP LEARNING A person with a weapon detected: "+ bcolors.OKCYAN + 
-                      "[Guns:" + str(info["gun"]) + ", " + "Knifes:" + str(info["knife"]) + "]" + bcolors.ENDC)
+                weapons_log = ""
+                for item in info:
+                    weapons_log = weapons_log + "'%s' : %d " % (item, info[item])
+                print(log + "DEEP LEARNING A person with a weapon detected: "+ bcolors.OKCYAN + weapons_log + bcolors.ENDC)
         elif level == 2:
             log = log_msg()
             if results is not None:
@@ -119,8 +129,9 @@ def apply_deepLearning(image):
                 print(log + "DEEP LEARNING Person received but face NOT detected.")
         elif level == 3:
             log = log_msg()
-            if len(result) > 0:
-                print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + str(result[1]) + bcolors.ENDC)
+            if len(results) > 0:
+                for ident in results:
+                    print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + ident[0] + bcolors.ENDC)
             else:
                 print(log + "DEEP LEARNING Face received but NOT identified.")                
     return results
@@ -264,20 +275,10 @@ def handle_client_Py(conn, addr):
         decimg=cv2.imdecode(data,1)
         if deepL:
             #Process Image (Neuronal Network)
-            output = apply_deepLearning(decimg)
-            if output is not None:
-                task_queue.put(output)
+            list_results = apply_deepLearning(decimg)
+            for img in list_results: task_queue.put(img)
         else:
             task_queue.put(decimg)
-
-        #frameTot += 1
-        #if (frameTot % PRINT_LIM) == 0:
-        #if first:
-        #t0 = time.time()
-        #first=False
-        #frameTot = 1
-        #t_tot = (time.time() - t0)
-        #timing_handler(frameTot, t_tot, frameTot / tTot)
 
     conn.close()
     
