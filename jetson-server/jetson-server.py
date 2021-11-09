@@ -11,14 +11,15 @@ import sys
 import os
 import shutil
 import argparse
-from datetime import datetime
+from   datetime import datetime
 
 #Deep learning
+from deepLearning.faceIdentify.detect    import faceIdentity
 from deepLearning.objectDetection.detect import YoloV5OD
 from deepLearning.objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
 ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
-ROOT_FACES_DB = "./faceIdentify/faces_database/"
+ROOT_FACES_DB = "./deepLearning/faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
            ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
