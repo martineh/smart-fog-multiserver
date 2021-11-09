@@ -18,6 +18,8 @@ from deepLearning.faceIdentify.detect    import faceIdentity
 from deepLearning.objectDetection.detect import YoloV5OD
 from deepLearning.objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
+
+#------------ Global Variables ------------#
 ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
 ROOT_FACES_DB = "./deepLearning/faceIdentify/faces_database/"
 
@@ -25,17 +27,11 @@ WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
            ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
            ROOT_WEIGHTS+"face_detection_yolov5s.pt"]
 
-load_t0  = time.time()
-bodyOD   = YoloV5OD(WEIGHTS[0], conf_thres=0.2)
-load_t1  = time.time()
-weaponOD = YoloV5OD(WEIGHTS[1], conf_thres=0.2)
-load_t2  = time.time()
-faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.2)
-load_t3  = time.time()
-faceIdentity = faceIdentity(ROOT_FACES_DB)
-load_t4  = time.time()
+bodyOD    = None
+weaponOD  = None
+faceOD    = None
+faceIdent = None
 
-#------------ Global Variables ------------#
 task_queue   = queue.Queue(20)
 
 PACK_SIZE    = 50000
@@ -65,6 +61,24 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 #----- Function and Classes Definition -----#
+def load_DeepLerning_data(level):
+    if level == 1:
+        global bodyOD    
+        global weaponOD 
+        load_t0  = time.time()
+        bodyOD   = YoloV5OD(WEIGHTS[0], conf_thres=0.2)
+        load_t1  = time.time()
+        weaponOD = YoloV5OD(WEIGHTS[1], conf_thres=0.2)
+        load_t2  = time.time()
+    elif level == 2:
+        global faceOD
+        faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.2)
+        load_t3  = time.time()
+    else:
+        global faceIdent
+        faceIdent = faceIdentity(ROOT_FACES_DB)
+        load_t4  = time.time()
+
 def log_msg():
     now = datetime.now()
     t_string = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -112,7 +126,7 @@ def apply_deepLearning(image):
         results = face_crop(faces, image)
     elif level == 3:
         #face identify
-        results = faceIdentity.identify(image)
+        results = faceIdent.identify(image)
         
     if debug:
         if level == 1:
@@ -495,6 +509,8 @@ if __name__ == "__main__":
     client_addr  = (client_ip, client_port)
 
 
+    load_DeepLerning_data(level)
+    
     #--Client-Python That Sends To Python Server or Finishes the Pipeline
     if level == 3:
         # START CLIENT: [Py](Back-end)
@@ -511,3 +527,4 @@ if __name__ == "__main__":
     else:
         # START SERVER: [Py]  -> [Py]
         server_start(handle_client_Py, server_addr)
+        
