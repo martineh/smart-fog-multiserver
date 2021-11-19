@@ -146,7 +146,7 @@ def apply_deepLearning(image):
             log = log_msg()
             if len(results) > 0:
                 for ident in results:
-                    print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + ident[0] + bcolors.ENDC)
+                    print(log + "DEEP LEARNING Face identified: " + bcolors.OKCYAN + ident + bcolors.ENDC)
             else:
                 print(log + "DEEP LEARNING Face received but NOT identified.")                
     return results
