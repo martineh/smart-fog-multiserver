@@ -194,7 +194,7 @@ def face_crop(faces, img_body):
         faces_cropped.append(face_cropped)
     return faces_cropped
 
-def save_pair_results(pairs, objects, bodies, img, saveName, verbose=False):
+def save_pair_results(pairs, objects, bodies, img, saveName, verbose=False, video=None):
     ratio = 2
     im0 = img.copy()
     annotator = Annotator(im0, line_width=2)
@@ -243,5 +243,7 @@ def save_pair_results(pairs, objects, bodies, img, saveName, verbose=False):
             annotator.box_label(body.box, label, color=RED_COLOR)
 
     im0 = annotator.result()
-    cv2.imwrite(saveName, im0)
-    
+    if video is None:
+        cv2.imwrite(saveName, im0)
+    else:
+        video.write(im0)
