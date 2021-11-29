@@ -7,6 +7,6 @@
     <ReducedSpatialResolution>640x480</ReducedSpatialResolution>
     <ReducedColorResolutionInBits>1</ReducedColorResolutionInBits>
     <BackgroundAverage>30</BackgroundAverage>
-    <PixelThreshold>5</PixelThreshold>
-    <ImageThreshold>1</ImageThreshold>
+    <PixelThreshold>0</PixelThreshold>
+    <ImageThreshold>0</ImageThreshold>
 </Root>

@@ -110,9 +110,9 @@ void insert_capture(Mat img) {
   if (items < QUEUE_MAX_FRAMES) {
     q_capture.push(img);
     items++;
-  } else {
-    std::cout << "Queue max:" << items << std::endl;
-  }
+  } //else
+    //std::cout << "Queue max:" << items << std::endl;
+  
   pthread_mutex_unlock(&m);
 }
 
@@ -137,9 +137,9 @@ void insert_send(Mat img) {
   if (items < QUEUE_MAX_FRAMES) {
     q_send.push(img);
     items_send++;
-  } else {
-    std::cout << "Queue max:" << items << std::endl;
-  }
+  } //else 
+    //std::cout << "Queue max:" << items << std::endl;
+  
   pthread_mutex_unlock(&m_send);
 }
 
@@ -368,9 +368,15 @@ void *getFrame(void *input) {
 
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   Mat img;
-  VideoCapture cap;
+
   if (debug) {
     VideoCapture cap(img_path); //VideoCapture From Video file
+    while (true) {
+      cap >> img;
+      if (img.empty())
+	break;
+      insert_capture(img);//img.clone());
+    }
   } else {    
     VideoCapture cap(0, cv::CAP_V4L); //VideoCapture From 0
     if(!cap.isOpened()) {
@@ -378,14 +384,14 @@ void *getFrame(void *input) {
       exit(-1);
     }
     cap.set(cv::CAP_PROP_FRAME_WIDTH,  xmlConfig->numCols);
-    cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numRows);
+    cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numRows);  
+  
+    while (true) {
+      cap >> img;
+      insert_capture(img);//img.clone());
+    }
   }
   
-  while (true) {
-    cap >> img;
-    insert_capture(img);//img.clone());
-  }
-
   finished = true;
   return NULL; 
 }
@@ -394,29 +400,24 @@ void *getFrame(void *input) {
 //= P R O C E S S    F R A M E S =//
 void *processFrame(void *input) {
 
-  if (debug) {
-    Mat img = pop_capture();
-    insert_send(img);
-    return NULL;
-  }
-
+  
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   Mat img, background;
   
   int colorReduction = xmlConfig->colorReduction;
   int rowsReduction  = xmlConfig->numRowsReduction;
   int colsReduction  = xmlConfig->numColsReduction;
-  
+
+
   background = calculateBackground(xmlConfig->bAverage);
-  
+
   while(!finished) {
     img = pop_capture();
     int threshold = differenceRatioBackground(background, img, xmlConfig->pxThreshold);
-    if (threshold > xmlConfig->imgThreshold) {
+    if (threshold >= xmlConfig->imgThreshold) {
       img = imageTransformHandler(img, colorReduction, rowsReduction, colsReduction, true);
       insert_send(img);
     }
-      //img.release();
   }
   
   return NULL;  
@@ -465,12 +466,10 @@ void *sendFrame(void *input) {
   timerStart(&t_start);
   while(!finished) {
     img = pop_send();
-
     imgPackBuff = newImageVectorPack(img, &max_buff);
-    //if (debug)
-    //std::cout << "[CLIENT] Send image of " << max_buff << "(bytes)" << std::endl;    
+
     size_t b = write(sockfd, imgPackBuff, max_buff);
-    //sleep(30);
+
     if (b == 0)
       std::cout << "[WARNING] No data writed to the server." << std::endl;
 
@@ -486,9 +485,10 @@ void *sendFrame(void *input) {
 	       getPrintMsg(TIMING_CODE, log_str), n_frames, t_global,  PRINT_LIM / t_total);
 	fflush(stdout);
 	timerStart(&t_start);
-    }    
+    }
+
   }
-  
+
   close(sockfd);
   
   return NULL;
