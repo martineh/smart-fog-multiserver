@@ -365,19 +365,18 @@ Mat imageTransformHandler(Mat img, int colorReduction,
 
 //= C A P T U R E    F R A M E S =//
 void *getFrame(void *input) {
-  
+
   xmlConfig_t *xmlConfig = (xmlConfig_t *)input;
   Mat img;
   VideoCapture cap;
   if (debug) {
-    VideoCapture cap(img_path); //VideoCapture From 0  
-  } else {
-    VideoCapture cap(0, cv::CAP_V4L); //VideoCapture From 0  
+    VideoCapture cap(img_path); //VideoCapture From Video file
+  } else {    
+    VideoCapture cap(0, cv::CAP_V4L); //VideoCapture From 0
     if(!cap.isOpened()) {
       std::cout << "[ERROR] I can't open the camera. Exit." << std::endl;
       exit(-1);
     }
-    //Image Size Fixed
     cap.set(cv::CAP_PROP_FRAME_WIDTH,  xmlConfig->numCols);
     cap.set(cv::CAP_PROP_FRAME_HEIGHT, xmlConfig->numRows);
   }
