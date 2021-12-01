@@ -24,7 +24,8 @@ ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
 ROOT_FACES_DB = "./deepLearning/faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
-           ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
+           ROOT_WEIGHTS+"weapons-new-train,pt",
+           #ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
            ROOT_WEIGHTS+"face_detection_yolov5s.pt"]
 
 bodyOD    = None
