@@ -10,9 +10,9 @@ SET(CMAKE_BUILD_TYPE Release)
 set (CMAKE_CXX_FLAGS "-O3 -g -Wall -pthread")
 
 
-add_executable( raspi-client
-  raspi-client.cpp
+add_executable( camera-client
+  camera-client.cpp
   camera-utils.cpp
   xml-utils/tinyxml2.cpp
   xml-utils/xml-utils.cpp)
-target_link_libraries( raspi-client ${OpenCV_LIBS} )
+target_link_libraries( camera-client ${OpenCV_LIBS} )

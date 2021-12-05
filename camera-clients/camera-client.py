@@ -233,8 +233,8 @@ def img_sender(client):
             t0 = time.time()
             
 
-def webcamCapture():
-    cap = cv2.VideoCapture(0)
+def webcamCapture(dev):
+    cap = cv2.VideoCapture(dev)
     
     while True:
         ret, frame = cap.read()
@@ -265,39 +265,25 @@ def piWebcamCapture():
     return
 
 
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("USAGE ERROR: %d (--client/--server)" % (sys.argv[0]))
-        sys.exit(-1)
-    
+if __name__ == "__main__":    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--server',  '-s', action='store_true', required=False, help="Enable server")
-    parser.add_argument('--client',  '-c', action='store_true', required=False, help="Enable client")
-    parser.add_argument('--pi',      '-p', action='store_true', required=False, help="Enable Raspberry Pi Webcam")
+    parser.add_argument('--dev', '-d', type=str, default='0' required=True, help="Device to read images from the webcam")
     
     args = parser.parse_args()
+    dev  = args.dev
     
-    server = args.server
-    client = args.client
-    pi =   = args.pi
-    
-    fd_conf = open("address.config", "r")
+    fd_conf = open("../process-servers/address.config", "r")
     for line in fd_conf:
         if line[0] != "#":
             sp = line.split(";")
             client_ip, client_port = sp[0], int(sp[1])
+            break
     fd_conf.close()
 
-    if client:
-        client_addr  = (client_ip, client_port)    
-        client_start(img_sender, client_addr);
-        if pi:
-            piWebcamCapture()
-        else:
-            webcamCapture()
+    client_addr  = (client_ip, client_port)    
+    client_start(img_sender, client_addr);
+    
+    if dev == 'pi':
+        piWebcamCapture()
     else:
-        server_ip    = "0.0.0.0"
-        server_addr  = (server_ip, client_port)
-
-        load_Deep_Learning()
-        server_start(server_OD, server_addr)
+        webcamCapture(int(dev))

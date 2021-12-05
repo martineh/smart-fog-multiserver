@@ -481,7 +481,7 @@ void *sendFrame(void *input) {
         timerStop(&t_stop);
 	double t_total = getTime(t_start, t_stop);
 	t_global += t_total;
-	printf("%sCLIENT %d frames captured in %0.2f(s) [%0.2f(fps)]\r",
+	printf("%sCLIENT %ld frames captured in %0.2f(s) [%0.2f(fps)]\r",
 	       getPrintMsg(TIMING_CODE, log_str), n_frames, t_global,  PRINT_LIM / t_total);
 	fflush(stdout);
 	timerStart(&t_start);
