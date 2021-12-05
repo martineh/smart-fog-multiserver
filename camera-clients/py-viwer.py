@@ -14,9 +14,6 @@ import argparse
 from   datetime import datetime
 import threading
 
-#Deep learning
-from objectDetection.detect import YoloV5OD
-from objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
 
 #------------ Global Variables ------------#
@@ -55,6 +52,10 @@ WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
            ROOT_WEIGHTS+"face_detection_yolov5s.pt"]
 
 def load_Deep_Learning():
+    #Deep learning
+    from objectDetection.detect import YoloV5OD
+    from objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
+
     global bodyOD
     global weaponOD
     bodyOD   = YoloV5OD(WEIGHTS[0], conf_thres=0.3)
@@ -248,6 +249,21 @@ def webcamCapture():
     
     return
 
+def piWebcamCapture():
+    import picamera
+    import picamera.array
+
+    with picamera.PiCamera() as camera:
+        with picamera.array.PiRGBArray(camera) as output:
+            camera.resolution = (640, 480)
+            camera.framerate  = 30
+            while True:
+	        camera.capture(output, 'bgr')
+                task_queue.put(output.array)
+                output.truncate(0)
+
+    return
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -257,12 +273,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--server',  '-s', action='store_true', required=False, help="Enable server")
     parser.add_argument('--client',  '-c', action='store_true', required=False, help="Enable client")
+    parser.add_argument('--pi',      '-p', action='store_true', required=False, help="Enable Raspberry Pi Webcam")
     
     args = parser.parse_args()
     
     server = args.server
     client = args.client
-
+    pi =   = args.pi
+    
     fd_conf = open("address.config", "r")
     for line in fd_conf:
         if line[0] != "#":
@@ -273,9 +291,13 @@ if __name__ == "__main__":
     if client:
         client_addr  = (client_ip, client_port)    
         client_start(img_sender, client_addr);
-        webcamCapture()
+        if pi:
+            piWebcamCapture()
+        else:
+            webcamCapture()
     else:
         server_ip    = "0.0.0.0"
         server_addr  = (server_ip, client_port)
+
         load_Deep_Learning()
         server_start(server_OD, server_addr)
