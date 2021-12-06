@@ -299,8 +299,8 @@ def handle_client_C(conn, addr):
             img = process_data(id_conn, data)
             if (img is not None) and deepL:
                 #Process Image (Neuronal Network)
-                imgOD = apply_deepLearning(img)
-                cv2.imshow('webcam', imgOD)                    
+                imgOD = apply_Deep_Learning(img)
+                cv2.imshow('webcam', imgOD)
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
     
     conn.close()
@@ -366,11 +366,12 @@ if __name__ == "__main__":
             sp = line.split(";")
             addresses.append((sp[1], int(sp[2])))
     fd_conf.close()
-    
+
+    print(addresses)    
     server_ip    = "0.0.0.0"
-    server_port  = addresses[0][1]
+    server_port  = addresses[1][1]
     server_addr  = (server_ip, server_port)
-    
+
     load_Deep_Learning()
     
     if mode == PYTHON:

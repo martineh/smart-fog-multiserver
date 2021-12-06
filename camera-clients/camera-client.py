@@ -267,22 +267,21 @@ def piWebcamCapture():
 
 if __name__ == "__main__":    
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dev', '-d', type=str, default='0' required=True, help="Device to read images from the webcam")
-    
+    parser.add_argument('--dev', '-d', type=str, default='0', required=True, help="Device to read images from the webcam")
+
     args = parser.parse_args()
     dev  = args.dev
-    
-    fd_conf = open("../process-servers/address.config", "r")
-    for line in fd_conf:
-        if line[0] != "#":
-            sp = line.split(";")
-            client_ip, client_port = sp[0], int(sp[1])
-            break
-    fd_conf.close()
 
-    client_addr  = (client_ip, client_port)    
+    tree = ET.parse("xml-config.xml")
+    root = tree.getroot()
+
+    for child in root:
+	if child.tag == "IpToSend": client_ip = child.text
+        elif child.tag == "PortToSend": client_port = int(child.text)
+
+    client_addr  = (client_ip, client_port)
     client_start(img_sender, client_addr);
-    
+
     if dev == 'pi':
         piWebcamCapture()
     else:
