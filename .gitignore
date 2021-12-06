@@ -1,8 +1,7 @@
+#*#
 *~
 __pycache__/
 *.py[cod]
 *$py.class
-raspi-client/build
-jetson-server/deepLearning/models/
-jetson-server/output/
-jetson-server/deepLearning/testOutput
+camera-clients/build
+process-servers/deepLearning/run
