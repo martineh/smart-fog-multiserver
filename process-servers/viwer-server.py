@@ -17,14 +17,12 @@ from   datetime import datetime
 from deepLearning.objectDetection.detect import YoloV5OD
 from deepLearning.objectDetection.detect import pairing_object_to_bodies, save_pair_results, body_crop, face_crop
 
-
 #------------ Global Variables ------------#
 ROOT_WEIGHTS = "./deepLearning/objectDetection/yoloV5-weights/"
 ROOT_FACES_DB = "./deepLearning/faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
-           ROOT_WEIGHTS+"weapons-new-train,pt",
-           #ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
+           ROOT_WEIGHTS+"weapons-new-train.pt",
            ROOT_WEIGHTS+"face_detection_yolov5s.pt"]
 
 bodyOD    = None
@@ -277,12 +275,12 @@ def handle_client_Py(conn, addr):
         length = recvall(conn, 16).decode()
         stringData = recvall(conn, int(length))
         data = np.frombuffer(stringData, dtype='uint8')
-        decimg=cv2.imdecode(data,1)        
+        img=cv2.imdecode(data,1)        
         #Process Image (Neuronal Network)
         if deepL:
-            imgOD = apply_Deep_Learning(decimg)
-            cv2.imshow('webcam', imgOD)
-            if cv2.waitKey(1) & 0xFF == ord('q'): break
+            img = apply_Deep_Learning(img)
+        cv2.imshow('webcam', img)
+        if cv2.waitKey(1) & 0xFF == ord('q'): break
             
     conn.close()
     
@@ -297,10 +295,11 @@ def handle_client_C(conn, addr):
         data = conn.recv(PACK_SIZE)
         if data:
             img = process_data(id_conn, data)
-            if (img is not None) and deepL:
-                #Process Image (Neuronal Network)
-                imgOD = apply_Deep_Learning(img)
-                cv2.imshow('webcam', imgOD)
+            if img is not None:
+                if deepL:
+                    #Process Image (Neuronal Network)
+                    img = apply_Deep_Learning(img)
+                cv2.imshow('webcam', img)
                 if cv2.waitKey(1) & 0xFF == ord('q'): break
     
     conn.close()

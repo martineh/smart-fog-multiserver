@@ -1,5 +1,5 @@
 <Root>
-    <IpToSend>192.168.1.61</IpToSend>
+    <IpToSend>192.168.1.180</IpToSend>
     <PortToSend>5000</PortToSend>
     <ResolutionToSend>640x480</ResolutionToSend>
     <FramesPerSecond>30</FramesPerSecond>

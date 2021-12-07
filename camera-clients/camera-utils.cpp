@@ -379,6 +379,7 @@ void *getFrame(void *input) {
     }
   } else {    
     VideoCapture cap(0, cv::CAP_V4L); //VideoCapture From 0
+    //VideoCapture cap(0);
     if(!cap.isOpened()) {
       std::cout << "[ERROR] I can't open the camera. Exit." << std::endl;
       exit(-1);
