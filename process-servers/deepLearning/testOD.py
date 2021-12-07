@@ -14,9 +14,7 @@ ROOT_WEIGHTS  = "./objectDetection/yoloV5-weights/"
 ROOT_FACES_DB = "./faceIdentify/faces_database/"
 
 WEIGHTS = [ROOT_WEIGHTS+"yolov5s.pt",
-           ROOT_WEIGHTS+"weapons-v5s6-new.pt",           
-           #ROOT_WEIGHTS+"weapons-new-train.pt",
-           #ROOT_WEIGHTS+"weapons-YOLOv5s-300epc.pt",
+           ROOT_WEIGHTS+"weapons-v5s-new.pt",           
            ROOT_WEIGHTS+"face_detection_yolov5s.pt"]
 
 #WEIGHTS_ALL = ROOT_WEIGHTS + "bodies-weapons-300epc.pt"
@@ -116,7 +114,7 @@ if __name__ == "__main__":
             post_time += (t2 - t1)
         
             #Save Image Results
-            save_pair_results(pairs, weapons, bodies, img, "", verbose=opt.verbose, video=out)
+            save_pair_results(pairs, weapons, bodies, img, verbose=opt.verbose, video=out)
             nFrames += 1
         out.release()
         cap.release()

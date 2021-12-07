@@ -13,7 +13,7 @@ import shutil
 import argparse
 from   datetime import datetime
 import threading
-
+import xml.etree.ElementTree as ET
 
 
 #------------ Global Variables ------------#
@@ -252,16 +252,16 @@ def webcamCapture(dev):
 def piWebcamCapture():
     import picamera
     import picamera.array
-
+    
     with picamera.PiCamera() as camera:
         with picamera.array.PiRGBArray(camera) as output:
             camera.resolution = (640, 480)
             camera.framerate  = 30
             while True:
-	        camera.capture(output, 'bgr')
+                camera.capture(output, 'bgr')
                 task_queue.put(output.array)
                 output.truncate(0)
-
+                
     return
 
 
@@ -276,7 +276,7 @@ if __name__ == "__main__":
     root = tree.getroot()
 
     for child in root:
-	if child.tag == "IpToSend": client_ip = child.text
+        if child.tag == "IpToSend": client_ip = child.text
         elif child.tag == "PortToSend": client_port = int(child.text)
 
     client_addr  = (client_ip, client_port)
