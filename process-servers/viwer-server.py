@@ -81,8 +81,8 @@ def apply_Deep_Learning(img):
 
     nFrames = 0
         
-    bodiesKnifes  = bodyOD.do_inference(img, class_filter=['person', 'knife'])
-    weapons = weaponOD.do_inference(img)
+    bodiesKnifes  = bodyOD.do_inference(img, class_filter=['person'])
+    weapons = weaponOD.do_inference(img, class_filter=['pistol'])
 
     bodies = []
     for obj in bodiesKnifes:

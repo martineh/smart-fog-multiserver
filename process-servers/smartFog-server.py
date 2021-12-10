@@ -105,8 +105,8 @@ def timing_handler(frameTot, tTot, fps):
 def apply_deepLearning(image):
     if level == 1:
         #weapong and body detection
-        bodiesKnifes  = bodyOD.do_inference(image, class_filter=['person', 'knife'])
-        weapons = weaponOD.do_inference(image)
+        bodiesKnifes  = bodyOD.do_inference(image, class_filter=['person'])
+        weapons = weaponOD.do_inference(image, class_filter=['pistol'])
         bodies = []
         for obj in bodiesKnifes:
             bodies.append(obj) if obj.name == 'person' else weapons.append(obj) 
