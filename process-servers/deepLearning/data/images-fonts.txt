@@ -1,9 +1,0 @@
-paper-images/image-1.jpg    Héctor self image
-paper-images/image-2.jpg    https://d.newsweek.com/en/full/384659/israel-knife-attack-middle-east-jerusalem.jpg
-paper-images/image-3.jpg    Héctor self image
-paper-images/image-4.jpg    Fran self image
-paper-images/image-5.jpg    Fran self image
-paper-images/image-6.jpg    https://i.pinimg.com/originals/a7/68/6d/a7686dc65fbd513fdf55620f77ffd229.jpg
-paper-images/image-7.jpg    https://cdn.unitycms.io/image/ocroped/2001,2000,1000,1000,0,0/i0zK7OaspBk/DJmzRUBfqFZAzwueEiXsvO.jpg
-paper-images/image-8.jpg    https://cdn.hobbyconsolas.com/sites/navi.axelspringer.es/public/media/image/2016/09/pulp-fiction.jpg
-paper-images/image-9.jpg    https://pbs.twimg.com/media/EnwAAJ4XUAE5_g6.jpg
