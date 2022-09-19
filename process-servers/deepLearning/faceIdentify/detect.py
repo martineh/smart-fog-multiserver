@@ -31,7 +31,7 @@ class faceIdentity:
             id_image = face_recognition.load_image_file(database + "/"+id_[0])
             id_face_encoding = face_recognition.face_encodings(id_image)[0]            
             self.known_face_encodings.append(id_face_encoding)
-            self.known_face_names.append(id_[1][:-1])    
+            self.known_face_names.append(id_[1])    
 
     def identify(self, unknown_image):
         top, right, bottom, left = (0, unknown_image.shape[1], unknown_image.shape[0], 0)

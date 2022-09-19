@@ -194,7 +194,7 @@ def face_crop(faces, img_body):
         faces_cropped.append(face_cropped)
     return faces_cropped
 
-def save_pair_results(pairs, objects, bodies, img, saveName=None, verbose=False, video=None):
+def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verbose=False, video=None):
     ratio = 2
     im0 = img.copy()
     annotator = Annotator(im0, line_width=2)
@@ -209,6 +209,7 @@ def save_pair_results(pairs, objects, bodies, img, saveName=None, verbose=False,
             label = f'{body.name} {body.conf:.2f}'
             if verbose: print(body) 
             annotator.box_label(body.box, label, color=pair_color)
+            print("  [*] Detection >Body + Weapon (Body): " + label)
             bodies_found[body_id] = pair_color
             color_id += 1
             if color_id == NUM_RCOLORS:
@@ -218,8 +219,9 @@ def save_pair_results(pairs, objects, bodies, img, saveName=None, verbose=False,
         label = f'{obj.name} {obj.conf:.2f}'
         if verbose: print(obj) 
         annotator.box_label(obj.box, label, color=pair_color)
+        print("  [*] Detection >Body + Weapon (Weapon): " + label)
         annotator.line(obj.center, body.center, color=pair_color)
-
+        
     for o_id, obj in enumerate(objects):
         found = False
         for pairObj_id, pairBody_id in pairs:
@@ -230,7 +232,8 @@ def save_pair_results(pairs, objects, bodies, img, saveName=None, verbose=False,
             label = f'{obj.name} {obj.conf:.2f}'
             if verbose: print(obj) 
             annotator.box_label(obj.box, label, color=RED_COLOR)
-                        
+            print("  [*] Detection >Object: " + label)
+            
     for b_id, body in enumerate(bodies):
         found = False
         for pairObj_id, pairBody_id in pairs:
@@ -241,11 +244,32 @@ def save_pair_results(pairs, objects, bodies, img, saveName=None, verbose=False,
             label = f'{body.name} {body.conf:.2f}'
             if verbose: print(body) 
             annotator.box_label(body.box, label, color=RED_COLOR)
-
+            print("  [*] Detection >Body: " + label)
+            
     im0 = annotator.result()
+
+    font         = cv2.FONT_HERSHEY_SIMPLEX
+    textPosition = (10,10)
+    fontScale    = 0.6
+    fontColor    = (0, 0, 255)
+    thickness    = 1
+    lineType     = 3
+
+    x, y = textPosition
+    text_size, _ = cv2.getTextSize(identTxt, font, fontScale, thickness)
+    text_w, text_h = text_size
+    cv2.rectangle(im0, textPosition, (x + text_w , y + text_h + 10), (255, 255, 255), -1)
+
+    #cv2.putText(im0, identTxt, (x, y + text_h + fontScale - 1), font, fontScale, fontColor, thickness)
+    cv2.putText(im0, identTxt[:-1], (textPosition[0], textPosition[1] + 15), font, 
+                fontScale, fontColor, thickness, lineType)
+
     if saveName is not None:
         cv2.imwrite(saveName, im0)
     elif video is not None:
         video.write(im0)
 
-    return im0
+    return 0
+
+     
+
