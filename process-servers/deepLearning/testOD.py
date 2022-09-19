@@ -23,6 +23,9 @@ WEAPONS_OUTPUT = "weapons-detected"
 CROPS_OUTPUT   = "bodies-croped"
 FACES_OUTPUT   = "faces-detected"
 
+def sortFiles(e):
+    return int(e.split("/")[2].split(".")[0][1:])
+
 def prepare_dirs(opt):
     outWPath = join(opt.outputPath, WEAPONS_OUTPUT)
     if opt.faces:
@@ -45,6 +48,9 @@ def get_files(opt):
     else:
         files = [join(opt.imgPath, f) for f in listdir(opt.imgPath) if isfile(join(opt.imgPath, f))]
     
+    if opt.video == "":
+        files.sort(key=sortFiles)
+
     return files
 
 def parse_options():
@@ -71,9 +77,9 @@ if __name__ == "__main__":
     weaponOD = YoloV5OD(WEIGHTS[1], conf_thres=0.4)
     load_t2  = time.time()
 
-    if opt.faces:
-        faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.3)
-        faceIdentity = faceIdentity(ROOT_FACES_DB)
+    #if opt.faces:
+    faceOD   = YoloV5OD(WEIGHTS[2], conf_thres=0.3)
+    faceIdentity = faceIdentity(ROOT_FACES_DB)
         
     load_t3  = time.time()
 
@@ -114,82 +120,81 @@ if __name__ == "__main__":
             post_time += (t2 - t1)
         
             #Save Image Results
-            save_pair_results(pairs, weapons, bodies, img, verbose=opt.verbose, video=out)
+            save_pair_results(pairs, weapons, bodies, img, "", verbose=opt.verbose, video=out)
             nFrames += 1
         out.release()
         cap.release()
     else:
-        for f in files:
+        tinit = time.time()
+        for idf, f in enumerate(files):
             img = cv2.imread(f)
+            print("")
+            print("----------------------------------------------------------")
+            print("Image %d '%s': " % (idf + 1, f))
+            print("----------------------------------------------------------")
             
-            if opt.verbose:
-                height, width = img.shape[:2]
-                print("Image '%s' (%d x %d): " % (f, height, width))
-        
-            #Inferece. Body and Weapons detection
-            load_t0 = time.time()
-            #weapons_bodies = weaponsBodiesOD.do_inference(img)
-            bodiesKnifes  = bodyOD.do_inference(img, class_filter=['person', 'knife'])
-            weapons = weaponOD.do_inference(img)
-            load_t1 = time.time()
             t0 = time.time()
+            #Inferece. Body and Weapons detection
+            bodiesKnifes  = bodyOD.do_inference(img, class_filter=['person', 'knife'])
+            weapons = weaponOD.do_inference(img)            
+            t1 = time.time()
+            inf_time += (t1 - t0)
+
             bodies = []
             for obj in bodiesKnifes:
                 bodies.append(obj) if obj.name == 'person' else weapons.append(obj) 
-            t1 = time.time()
-            inf_time += (t1 - t0)
         
             #Pairing bodies with weapons and crop bodies
             pairs = pairing_object_to_bodies(weapons, bodies) 
             bodies_crop = body_crop(pairs, weapons, bodies, img)
-            t2 = time.time()
-            post_time += (t2 - t1)
-        
+
+            
+            #Save Body Crops
+            #cropPath = outCropsPath + "/" + os.path.splitext(os.path.basename(f))[0]
+            #os.mkdir(cropPath)
+            
+            tot_bodies += len(bodies_crop)
+            tot_img_faces = 0
+            tot_img_identifies = 0
+            idents = ""
+            for i, b in enumerate(bodies_crop):
+                t0 = time.time()
+                faces  = faceOD.do_inference(b[0])
+                faces_crop = face_crop(faces, b[0])
+                face_time += (time.time() - t0)
+                tot_faces += len(faces_crop)
+                tot_img_faces += len(faces_crop)
+                for j, face in enumerate(faces_crop):
+                    t0 = time.time()
+                    identities = faceIdentity.identify(face)
+                    identify_time  += (time.time() - t0)
+                    tot_img_identifies += len(identities)
+                    if len(identities) > 0:
+                        ident = identities[0]
+                    else:
+                        ident = "Unknown"
+                    print("      [*] Face Identify: %s " % (ident)) 
+                    idents += "#F" + str(i + j) + ": " + ident + ","
+            
+            if tot_img_faces == 0:
+                idents = "Not Faces.";
+
             #Save Image Results
             outFile = outWeaponsPath + "/out-" + os.path.basename(f)
-            save_pair_results(pairs, weapons, bodies, img, outFile, verbose=opt.verbose)
-        
-            #Save Body Crops
-            cropPath = outCropsPath + "/" + os.path.splitext(os.path.basename(f))[0]
-            os.mkdir(cropPath)
-            tot_bodies += len(bodies_crop)
-            for i, b in enumerate(bodies_crop):
-                body_name = cropPath + "/body-"+str(i)+".jpg"
-                if opt.faces:
-                    t0 = time.time()
-                    faces  = faceOD.do_inference(b[0])
-                    faces_crop = face_crop(faces, b[0])
-                    face_time += (time.time() - t0)
-                    tot_faces += len(faces_crop)
-                    t0 = time.time()
-                    for face in faces_crop:
-                        identities = faceIdentity.identify(face)
-                        for ident in identities: print("Identify: %s " % (ident)) 
-                        identify_time += (time.time() - t0)
-                    faceOD.save_results(body_name, b[0], faces)
-                else:
-                    cv2.imwrite(body_name, b[0])
-            
+            save_pair_results(pairs, weapons, bodies, img, idents, outFile)
+        tend  = time.time()
         nFrames = len(files)
-            
+
+    print("")
     print("==========================================================")
     print("=              P R O C E S S     T I M I N G             =")
     print("==========================================================")
-    print("Models Load Timing:")
-    print("    [*] Weights '"+os.path.basename(WEIGHTS[0])+"' Loaded in: %0.2f(s)" % (load_t1 - load_t0))
-    #print("    [*] Weights '"+os.path.basename(WEIGHTS[1])+"' Loaded in: %0.2f(s)" % (load_t2 - load_t1))
-    if opt.faces:
-        print("    [*] Weights '"+os.path.basename(WEIGHTS[2])+"' Loaded in: %0.2f(s)" % (load_t2 - load_t1))        
-    print("Timing Weapons and Bodies Inference (%d Images Processed):" % (nFrames))
-    print("    [*] Inference Time per image  :  %0.2f(s) " % (inf_time / nFrames))
-    print("    [*] Preprocess Time per image :  %0.2f(s) " % (post_time / nFrames))
-    print("    [*] TOTAL Time per image      :  %0.2f(s) " % ((inf_time + post_time) / nFrames))
-    if opt.faces:
-        print("Timing Faces Inference (%d Bodies Processed):" % (tot_bodies))
-        print("    [*] TOTAL Time per image      :  %0.2f(s) " % (face_time / tot_bodies))
-        print("Timing Faces Identify  (%d Faces Processed) :" % (tot_faces))
-        print("    [*] TOTAL Time per image      :  %0.2f(s) " % (identify_time / tot_faces))
-        print("Total Timing (Weapons + Bodies + Faces + Face Identify) : %0.2f(s)" % ((face_time / tot_bodies) +
-                                                                                      ((inf_time + post_time) / nFrames) +
-                                                                                      ((identify_time) / tot_faces)))
+    print(" Total Images processed                         : %d "       % (nFrames))
+    print(" Time Per Image                                 : %0.5f(s) " % ((tend - tinit) / nFrames))
+    print("   [*] Inference Time Per Call (Body + weapon)  : %0.5f(s) " % (inf_time / (nFrames * 2)))
+    print("       [*] Total Calls                          : %d "       % (nFrames * 2))
+    print("   [*] Inference Time Per Call (Face Detection) : %0.5f(s) " % (face_time / tot_bodies))
+    print("       [*] Total Calls                          : %d "       % (tot_bodies))
+    print("   [*] Inference Time Per Call (Face Identify)  : %0.5f(s) " % (identify_time / tot_faces))
+    print("       [*] Total Calls                          : %d "       % (tot_faces))
     print("==========================================================")
