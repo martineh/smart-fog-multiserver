@@ -164,7 +164,6 @@ class YoloV5OD:
 
 def pairing_object_to_bodies(objects, bodies):
     pairs = []
-
     for o, obj in enumerate(objects):
         min_distance, body_pair = sys.maxsize, -1
         for b, body in enumerate(bodies):
@@ -194,7 +193,7 @@ def face_crop(faces, img_body):
         faces_cropped.append(face_cropped)
     return faces_cropped
 
-def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verbose=False, video=None):
+def save_pair_results(pairs, objects, bodies, img, identTxt, verbose=False, outImage=None, outVideo=None, display=None):
     ratio = 2
     im0 = img.copy()
     annotator = Annotator(im0, line_width=2)
@@ -207,9 +206,8 @@ def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verb
         if body_id not in bodies_found:
             pair_color = RCOLORS[color_id]
             label = f'{body.name} {body.conf:.2f}'
-            if verbose: print(body) 
             annotator.box_label(body.box, label, color=pair_color)
-            print("  [*] Detection >Body + Weapon (Body): " + label)
+            #print("  [*] Detection >Body + Weapon (Body): " + label)
             bodies_found[body_id] = pair_color
             color_id += 1
             if color_id == NUM_RCOLORS:
@@ -217,9 +215,8 @@ def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verb
         else:
             pair_color = bodies_found[body_id]            
         label = f'{obj.name} {obj.conf:.2f}'
-        if verbose: print(obj) 
         annotator.box_label(obj.box, label, color=pair_color)
-        print("  [*] Detection >Body + Weapon (Weapon): " + label)
+        #print("  [*] Detection >Body + Weapon (Weapon): " + label)
         annotator.line(obj.center, body.center, color=pair_color)
         
     for o_id, obj in enumerate(objects):
@@ -230,9 +227,8 @@ def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verb
                 break
         if not found:
             label = f'{obj.name} {obj.conf:.2f}'
-            if verbose: print(obj) 
             annotator.box_label(obj.box, label, color=RED_COLOR)
-            print("  [*] Detection >Object: " + label)
+            #print("  [*] Detection >Object: " + label)
             
     for b_id, body in enumerate(bodies):
         found = False
@@ -242,9 +238,8 @@ def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verb
                 break
         if not found:
             label = f'{body.name} {body.conf:.2f}'
-            if verbose: print(body) 
             annotator.box_label(body.box, label, color=RED_COLOR)
-            print("  [*] Detection >Body: " + label)
+            #print("  [*] Detection >Body: " + label)
             
     im0 = annotator.result()
 
@@ -264,10 +259,12 @@ def save_pair_results(pairs, objects, bodies, img, identTxt, saveName=None, verb
     cv2.putText(im0, identTxt[:-1], (textPosition[0], textPosition[1] + 15), font, 
                 fontScale, fontColor, thickness, lineType)
 
-    if saveName is not None:
-        cv2.imwrite(saveName, im0)
-    elif video is not None:
-        video.write(im0)
+    if display is not None:
+        cv2.imshow(display, im0)  
+    elif outVideo is None:
+        cv2.imwrite(outImage, im0)
+    else:
+        outVideo.write(im0)
 
     return 0
 
