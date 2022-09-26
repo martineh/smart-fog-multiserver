@@ -123,7 +123,7 @@ if __name__ == "__main__":
     tot_time      = 0.0
     nFrames       = 0
     
-    if opt.webcam != "":
+    if opt.webcam :
         #cap = cv2.VideoCapture('rtsp://192.168.1.245:51503/19FFC3852035457401E0D35E0499725E_1 RTSP/1.0')
         cap = cv2.VideoCapture(0)
         while(True):
